@@ -12,3 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 print("hello world")
 ```
+
+```{r}
+rnorm(100, 0, 1)
+```
