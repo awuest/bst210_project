@@ -1,0 +1,173 @@
+---
+title: "Code"
+author: 'ALA Mode (Group 2): Anja Shahu, Anna Wuest, Ligia Flores'
+date: "11/4/2020"
+output: pdf_document
+---
+
+
+```{r data_load, results = "hide"}
+url <- "https://meps.ahrq.gov/mepsweb/data_files/pufs/h209dat.zip"
+download.file(url, temp <- tempfile())
+meps_path <- unzip(temp, exdir = tempdir())
+source("https://meps.ahrq.gov/mepsweb/data_stats/download_data/pufs/h209/h209ru.txt")
+unlink(temp) 
+```
+
+```{r library_load, results = "hide", message = FALSE}
+library(tidyverse)
+library(RColorBrewer)
+```
+
+```{r reduce_data}
+# creating a reduced data frame including only the variables that we'll be considering
+h209red <- data.frame("pap" = h209$ADPAP42,
+                      "region" = h209$REGION18,
+                      "race" = h209$RACETHX,
+                      "age" = h209$AGE18X,
+                      "marital_stat" = h209$MARRY18X, # newly added
+                      "educ" = h209$EDUCYR, # newly added
+                      "smoke_freq" = h209$OFTSMK53, # newly added
+                      "income_indiv" = h209$TTLP18X,
+                      "income_fam" = h209$FAMINC18,
+                      "income_percpov" = h209$POVLEV18,
+                      "hrsworked_rd1" = h209$HOUR31H,
+                      "hrsworked_rd2" = h209$HOUR42H,
+                      "hrsworked_rd3" = h209$HOUR53H,
+                      "limitation" = h209$ACTLIM31, # newly added 
+                      "menhlth_rd1" = h209$MNHLTH31, # already included
+                      "menhlth_rd2" = h209$MNHLTH42, # already included
+                      "menthlth_rd3" = h209$MNHLTH53, # already included
+                      "genhlth_rd1" = h209$RTHLTH31,
+                      "genhlth_rd2" = h209$RTHLTH42,
+                      "genhlth_rd3" = h209$RTHLTH53,
+                      "totexp" = h209$TOTEXP18,
+                      "outofpocket_exp" = h209$TOTSLF18,
+                      "afford_care" = h209$AFRDCA42,
+                      "have_usc" = h209$HAVEUS42,
+                      "dist_from_usc" = h209$TMTKUS42,
+                      "rch_usc_byphn" = h209$PHNREG42,
+                      "usc_offhrs_nw" = h209$OFFHOU42,
+                      "usc_asks_abt_trts" = h209$TREATM42,
+                      "usc_asks_hlp_dec" = h209$DECIDE42,
+                      "usc_expln_options" = h209$EXPLOP42,
+                      "usc_spk_lang" = h209$PRVSPK42,
+                      "usc_gender" = h209$GENDRP42,
+                      "inscov_gen_2018" = h209$INSCOV18,
+                      "inscov_fullyr_2018" = h209$INSURC18)
+
+h209red <- h209red %>% 
+  as_tibble() %>% 
+  filter(pap != -1) %>% # filtering out the people who were not asked pap smear question
+  filter(age >= 21 & age <= 65) # filtering to women ages 21-65
+```
+
+```{r recode_cat_variables}
+# creating factor versions of our categorical variables 
+
+# pap status
+h209red <- h209red %>% 
+  mutate(pap_f = factor(pap, 
+                        levels = c("1", "2", "-15"))) %>%
+  mutate(pap_f = fct_recode(pap_f, 
+                            "yes" = "1",
+                            "no" = "2",
+                            "cannot be computed" = "-15"))
+
+# region
+h209red <- h209red %>% 
+  mutate(region_f = factor(region, 
+                           levels = c("1", "2", "3", "4", "-1"))) %>%
+  mutate(region_f = fct_recode(region_f, 
+                               "northeast" = "1",
+                               "midwest" = "2",
+                               "south" = "3",
+                               "west" = "4",
+                               "not asked" = "-1"))
+
+# race
+h209red <- h209red %>% 
+  mutate(race_f = factor(race, 
+                         levels = c("2", "1", "3", "4", "5"))) %>%
+  mutate(race_f = fct_recode(race_f, 
+                             "white" = "2",
+                             "hispanic" = "1",
+                             "black" = "3",
+                             "asian" = "4",
+                             "other or multiple races" = "5"))
+
+# marital status
+h209red <- h209red %>% 
+  mutate(marital_stat_f = factor(marital_stat, 
+                                 levels = c("5", "1", "2", "3", "4"))) %>%
+  mutate(marital_stat_f = fct_recode(marital_stat_f,
+                                     "never married" = "5",
+                                     "married" = "1",
+                                     "widowed" = "2",
+                                     "divorced" = "3",
+                                     "seperated" = "4"))
+# education
+
+# smoking frequency
+
+# limitation
+
+# perceived mental health 
+
+# perceived general health
+
+# ability to afford care
+h209red <- h209red %>% 
+  mutate(afford_care_f = factor(afford_care, 
+                                levels = c("2", "1", "-8", "-7"))) %>%
+  mutate(afford_care_f = fct_recode(afford_care_f,
+                                    "no" = "2",
+                                    "yes" = "1",
+                                    "did not answer" = "-8",
+                                    "did not answer" = "-7"))
+
+# usual source of care status
+h209red <- h209red %>% 
+  mutate(have_usc_f = factor(have_usc, 
+                             levels = c("2", "1", "-8", "-7"))) %>%
+  mutate(have_usc_f = fct_recode(have_usc_f,
+                                 "no" = "2",
+                                 "yes" = "1",
+                                 "did not answer" = "-8",
+                                 "did not answer" = "-7"))
+
+# distance from provider
+
+# ability to reach provider by phone
+
+# provider offers office hours during nights/weekends
+
+# provider asks about treatments
+
+# provider asks person to help make decisions
+
+# provider presents and explains all options
+
+# provider speaks person's language
+
+# gender of provider
+h209red <- h209red %>% 
+  mutate(usc_gender_f = factor(usc_gender, 
+                               levels = c("1", "2", "-8", "-1"))) %>%
+  mutate(usc_gender_f = fct_recode(usc_gender_f,
+                                   "male" = "1",
+                                   "female" = "2",
+                                   "did not answer" = "-8",
+                                   "not asked" = "-1"))
+
+# insurance indicator
+h209red <- h209red %>% 
+  mutate(inscov_gen_2018_f = factor(inscov_gen_2018, 
+                                    levels = c("1", "2", "3"))) %>%
+  mutate(inscov_gen_2018_f = fct_recode(inscov_gen_2018_f,
+                                        "any private" = "1",
+                                        "public only" = "2",
+                                        "uninsured" = "3"))
+
+# full year insurance status in 2018
+```

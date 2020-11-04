@@ -1,0 +1,10 @@
+---
+title: 'Homework 8: 2nd Project Check-In'
+author: 'ALA Mode (Group 2): Anja Shahu, Anna Wuest, Ligia Flores'
+date: "11/4/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
