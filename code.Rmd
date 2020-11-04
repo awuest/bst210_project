@@ -107,7 +107,16 @@ h209red <- h209red %>%
                                      "divorced" = "3",
                                      "seperated" = "4"))
 # education
-
+h209red <- h209red %>%
+  mutate(educ_f = factor(educ)) %>%
+  mutate(educ_f = fct_collapse(educ_f, 
+                               "no school" = "0",
+                               "any elementary" = c("1", "2", "3", "4", "5", "6", "7", "8"),
+                               "any high school" = c("9", "10", "11", "12"),
+                               "any college" = c("13", "14", "15", "16", "17"),
+                               "cannot be computed" = "-15",
+                               "did not answer" = c("-8", "-7")))
+  
 # smoking frequency
 
 # limitation
