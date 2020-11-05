@@ -54,6 +54,8 @@ h209red <- data.frame("pap" = h209$ADPAP42,
                       "usc_gender" = h209$GENDRP42,
                       "inscov_gen_2018" = h209$INSCOV18) 
 
+rm(h209) # remove original data set from environment
+
 h209red <- h209red %>% 
   as_tibble() %>% 
   filter(pap != -1) %>% # filtering out the people who were not asked pap smear question
