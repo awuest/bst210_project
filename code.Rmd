@@ -5,6 +5,10 @@ date: "11/4/2020"
 output: pdf_document
 ---
 
+```{r library_load, results = "hide", message = FALSE}
+library(tidyverse)
+library(RColorBrewer)
+```
 
 ```{r data_load, results = "hide"}
 url <- "https://meps.ahrq.gov/mepsweb/data_files/pufs/h209dat.zip"
@@ -12,11 +16,6 @@ download.file(url, temp <- tempfile())
 meps_path <- unzip(temp, exdir = tempdir())
 source("https://meps.ahrq.gov/mepsweb/data_stats/download_data/pufs/h209/h209ru.txt")
 unlink(temp) 
-```
-
-```{r library_load, results = "hide", message = FALSE}
-library(tidyverse)
-library(RColorBrewer)
 ```
 
 ```{r reduce_data}
@@ -37,7 +36,7 @@ h209red <- data.frame("pap" = h209$ADPAP42,
                       "limitation" = h209$ACTLIM31, # newly added 
                       "menhlth_rd1" = h209$MNHLTH31, # already included
                       "menhlth_rd2" = h209$MNHLTH42, # already included
-                      "menthlth_rd3" = h209$MNHLTH53, # already included
+                      "menhlth_rd3" = h209$MNHLTH53, # already included
                       "genhlth_rd1" = h209$RTHLTH31,
                       "genhlth_rd2" = h209$RTHLTH42,
                       "genhlth_rd3" = h209$RTHLTH53,
@@ -54,12 +53,12 @@ h209red <- data.frame("pap" = h209$ADPAP42,
                       "usc_spk_lang" = h209$PRVSPK42,
                       "usc_gender" = h209$GENDRP42,
                       "inscov_gen_2018" = h209$INSCOV18,
-                      "inscov_fullyr_2018" = h209$INSURC18)
+                      "inscov_fullyr_2018" = h209$INSURC18) # we can delete this last variable since it's useless once we've filtered out women over 65
 
 h209red <- h209red %>% 
   as_tibble() %>% 
   filter(pap != -1) %>% # filtering out the people who were not asked pap smear question
-  filter(age >= 21 & age <= 65) # filtering to women ages 21-65
+  filter(age >= 21 & age <= 65) # filtering to women ages 21-65 (note there was 1 inapplicable person that was filtered out as a result of this but I thought that was fine)
 ```
 
 ```{r recode_cat_variables}
@@ -77,13 +76,12 @@ h209red <- h209red %>%
 # region
 h209red <- h209red %>% 
   mutate(region_f = factor(region, 
-                           levels = c("1", "2", "3", "4", "-1"))) %>%
+                           levels = c("1", "2", "3", "4"))) %>%
   mutate(region_f = fct_recode(region_f, 
                                "northeast" = "1",
                                "midwest" = "2",
                                "south" = "3",
-                               "west" = "4",
-                               "not asked" = "-1"))
+                               "west" = "4"))
 
 # race
 h209red <- h209red %>% 
@@ -118,12 +116,37 @@ h209red <- h209red %>%
                                "did not answer" = c("-8", "-7")))
   
 # smoking frequency
+h209red <- h209red %>% 
+  mutate(smoke_freq_f = factor(smoke_freq,
+                               levels = c("3", "2", "1", "-8", "-7", "-1"))) %>%
+  mutate(smoke_freq_f = fct_recode(smoke_freq_f, 
+                                   "never" = "3", 
+                                   "some days" = "2", 
+                                   "every day" = "1", 
+                                   "did not answer" = "-8", 
+                                   "did not answer" = "-7", 
+                                   "inapplicable" = "-1"))
 
 # limitation
+h209red <- h209red %>% 
+  mutate(limitation_f = factor(limitation,
+                               levels = c("2", "1", "-8", "-7", "-1"))) %>%
+  mutate(limitation_f = fct_recode(limitation_f,
+                                   "no" = "2", 
+                                   "yes" = "1",
+                                   "did not answer" = "-8",
+                                   "did not answer" = "-7",
+                                   "inapplicable" = "-1"))
 
 # perceived mental health 
+# this variable (as well as perceived general health) are interesting because they 
+# were recorded at three different times and sometimes peoples scores changed
+# should we just pick one of those times to make it easier for ourselves?
+# or should we try to make a mental health score that combines all three times?
+# LOOK BELOW IN NEXT CODE CHUNK FOR SOME MORE COMMENTARY
 
-# perceived general health
+# perceived general heath
+# look at notes for perceived mental health and below in next code chunk for commentary
 
 # ability to afford care
 h209red <- h209red %>% 
@@ -146,18 +169,91 @@ h209red <- h209red %>%
                                  "did not answer" = "-7"))
 
 # distance from provider
+h209red <- h209red %>% 
+  mutate(dist_from_usc_f = factor(dist_from_usc, 
+                                  levels = c("1", "2", "3", "4", "5", "6", "-8", "-7", "-1"))) %>%
+  mutate(dist_from_usc_f = fct_recode(dist_from_usc_f,
+                                      "<15" = "1",
+                                      "15 to 30" = "2",
+                                      "31 to 60" = "3",
+                                      "61 to 90" = "4",
+                                      "91 to 120" = "5",
+                                      ">120" = "6",
+                                      "did not answer" = "-8",
+                                      "did not answer" = "-7",
+                                      "inapplicable" = "-1"))
+
 
 # ability to reach provider by phone
+h209red <- h209red %>% 
+  mutate(rch_usc_byphn_f = factor(rch_usc_byphn, 
+                                  levels = c("4", "3", "2", "1", "-8", "-7", "-1"))) %>%
+  mutate(rch_usc_byphn_f = fct_recode(rch_usc_byphn_f,
+                                      "not at all difficult" = "4",
+                                      "not too difficult" = "3",
+                                      "somewhat difficult" = "2",
+                                      "very difficult" = "1",
+                                      "did not answer" = "-8",
+                                      "did not answer" = "-7",
+                                      "inapplicable" = "-1"))
 
 # provider offers office hours during nights/weekends
+h209red <- h209red %>% 
+  mutate(usc_offhrs_nw_f = factor(usc_offhrs_nw, 
+                                  levels = c("2", "1", "-8", "-7", "-1"))) %>%
+  mutate(usc_offhrs_nw_f = fct_recode(usc_offhrs_nw_f,
+                                      "no" = "2",
+                                      "yes" = "1",
+                                      "did not answer" = "-8",
+                                      "did not answer" = "-7",
+                                      "inapplicable" = "-1"))
 
 # provider asks about treatments
+h209red <- h209red %>% 
+  mutate(usc_asks_abt_trts_f = factor(usc_asks_abt_trts, 
+                                      levels = c("2", "1", "-8", "-7", "-1"))) %>%
+  mutate(usc_asks_abt_trts_f = fct_recode(usc_asks_abt_trts_f,
+                                          "no" = "2",
+                                          "yes" = "1",
+                                          "did not answer" = "-8",
+                                          "did not answer" = "-7",
+                                          "inapplicable" = "-1"))
 
 # provider asks person to help make decisions
+h209red <- h209red %>% 
+  mutate(usc_asks_hlp_dec_f = factor(usc_asks_hlp_dec, 
+                                     levels = c("1", "2", "3", "4", "-8", "-7", "-1"))) %>%
+  mutate(usc_asks_hlp_dec_f = fct_recode(usc_asks_hlp_dec_f,
+                                         "never" = "1",
+                                         "sometimes" = "2",
+                                         "usually" = "3",
+                                         "always" = "4",
+                                         "did not answer" = "-8",
+                                         "did not answer" = "-7",
+                                         "inapplicable" = "-1"))
 
 # provider presents and explains all options
+h209red <- h209red %>% 
+  mutate(usc_expln_options_f = factor(usc_expln_options, 
+                                      levels = c("2", "1", "-8", "-7", "-1"))) %>%
+  mutate(usc_expln_options_f = fct_recode(usc_expln_options_f,
+                                          "no" = "2",
+                                          "yes" = "1",
+                                          "did not answer" = "-8",
+                                          "did not answer" = "-7",
+                                          "inapplicable" = "-1"))
 
 # provider speaks person's language
+table(h209red$usc_spk_lang)
+h209red <- h209red %>% 
+  mutate(usc_spk_lang_f = factor(usc_spk_lang, 
+                                 levels = c("2", "1", "-8", "-7", "-1"))) %>%
+  mutate(usc_spk_lang_f = fct_recode(usc_spk_lang_f,
+                                     "no" = "2",
+                                     "yes" = "1",
+                                     "did not answer" = "-8",
+                                     "did not answer" = "-7",
+                                     "inapplicable" = "-1"))
 
 # gender of provider
 h209red <- h209red %>% 
@@ -167,9 +263,10 @@ h209red <- h209red %>%
                                    "male" = "1",
                                    "female" = "2",
                                    "did not answer" = "-8",
-                                   "not asked" = "-1"))
+                                   "inapplicable" = "-1"))
+table(h209red$usc_gender_f)
 
-# insurance indicator
+# insurance indicator in 2018
 h209red <- h209red %>% 
   mutate(inscov_gen_2018_f = factor(inscov_gen_2018, 
                                     levels = c("1", "2", "3"))) %>%
@@ -177,6 +274,121 @@ h209red <- h209red %>%
                                         "any private" = "1",
                                         "public only" = "2",
                                         "uninsured" = "3"))
-
-# full year insurance status in 2018
 ```
+
+
+```{r}
+# checking if any variables will be too problematic (in terms of missing values) to use 
+
+
+# pap smear variable
+table(h209red$pap_f) # about 600 that weren't able to be computed (maybe consider imputation since it is the outcome variable?)
+
+
+# demographic variables
+# region
+table(h209red$region_f) # looks good!
+# race
+table(h209red$race_f) # looks good!
+# age
+h209red %>% filter(age < 0) %>% summarise(n = n()) # looks good!
+# marital status
+table(h209red$marital_stat_f) # looks good
+# education level
+table(h209red$educ_f) # only a few missing (but maybe we should consider putting no school and any elementary together since no school has so few?? or maybe we should recode the levels differently bc I did manually collapse the levels to be like this since originally there were many more levels and I thought it didn't make sense to have that many)
+
+
+# smoking variable
+table(h209red$smoke_freq_f) # only a few missing
+
+
+# income variables
+# individual income
+h209red %>% filter(income_indiv < 0) %>% summarise(n = n())
+# family income
+h209red %>% filter(income_fam < 0) %>% summarise(n = n())
+# family income as percent of poverty line
+h209red %>% filter(income_percpov < 0) %>% summarise(n = n())
+
+
+# hours worked variable
+h209red %>% filter(hrsworked_rd1 < 0) %>% summarise(n = n()) 
+h209red %>% filter(hrsworked_rd2 < 0) %>% summarise(n = n()) 
+h209red %>% filter(hrsworked_rd3 < 0) %>% summarise(n = n()) 
+# a lot of missing data
+# I can't tell if those people are just those that don't have a job and that's why it's inapplicable though??
+# in this case it may be worth it to pull in the corresponding employment status variable (EMPST31, EMPST42, EMPST53) and cross check
+# like I did below for the access variables
+# but we should prob check graphs of pap smear status against this variable 
+# to see if it's even worth it to put in that extra effort
+
+
+# limitation variable
+table(h209red$limitation_f) # only a few missing
+
+
+# health variables
+# mental health
+table(h209red$menhlth_rd1) # only a few missing for each (note: -8 and -7 are "did not answer" and -1 is "inapplicable")
+table(h209red$menhlth_rd2) # second round has fewest missing so maybe we should just use this only
+table(h209red$menhlth_rd3)
+# general health
+table(h209red$genhlth_rd1) # only a few missing for each (note: -8 and -7 are "did not answer" and -1 is "inapplicable")
+table(h209red$genhlth_rd2) # maybe we should just use this second round since it has almost no missing
+table(h209red$genhlth_rd3)
+
+
+# expenditure variables
+# total exp 
+h209red %>% filter(totexp < 0) %>% summarise(n = n()) # no missing
+# out of pocket 
+h209red %>% filter(outofpocket_exp < 0) %>% summarise(n = n()) # no missing
+# ability to afford care
+table(h209red$afford_care_f) # only a few missing
+
+
+# access and provider satisfaction variables
+# we know that there was no people skipped for question about if people had a provider or not (just a few who didn't answer)
+table(h209red$have_usc_f)
+# we know that the the access and provider satisfaction variables have about 2k inapplicable observations each
+# we can check to see if those inapplicables are just the people who answered that they did not have a provider
+# we're excluding the speaking same language variable bc that one has a huge # of inapplicables since all native english speakers
+# and people who speak english well were excluded from being asked it
+h209red %>% 
+  select(have_usc_f,
+         dist_from_usc_f,
+         rch_usc_byphn_f,
+         usc_offhrs_nw_f,
+         usc_asks_abt_trts_f,
+         usc_asks_hlp_dec_f,
+         usc_expln_options_f) %>% 
+  filter(dist_from_usc_f == "inapplicable" | rch_usc_byphn_f == "inapplicable" | 
+         usc_offhrs_nw_f == "inapplicable" | usc_asks_abt_trts_f == "inapplicable" | 
+         usc_asks_hlp_dec_f == "inapplicable" | usc_expln_options_f == "inapplicable") %>%
+  group_by(have_usc_f) %>%
+  summarise(n = n())
+# we can see that the inapplicables are almost all from people who answered no or did not answer the having a provider question
+# so we aren't dealing with many missing values at all like you might think at first glance!
+
+
+# variable for if provider speaks person's language 
+table(h209red$usc_spk_lang_f) # we see a lot of inapplicables
+# according to code book "PRVSPK42 is set to a value other than ‘-1’ (Inapplicable) for persons eligible for the 
+# Access to Care supplement, who had a usual source of care, and were identified as speaking a language 
+# other than English at home (OTHLANG = ‘1’) and speaking English either “Not Well” or “Not at All” 
+# (HWELLSPK = ‘3’ or ‘4’). PRVSPK42 is set to ‘-1’ (Inapplicable) for all persons not meeting these 
+# criteria or who were deceased, institutionalized, or younger than 5 years of age.
+# I think it may be difficult to deal with since it seems to be dependent on a few other variables and we'd have to load 
+# those extra variables in to be able to create a usable variable  with levels for 
+# "inapplicable", "native english speaker", "answers yes", "answers no"
+
+
+# gender of provider
+table(h209red$usc_gender_f) # inapplicables are due to people who don't have provider and people who were skipped on the question 
+# seems to be too many people skipped for this variable to be used
+
+
+# insurance coverage variable
+table(h209red$inscov_gen_2018_f) # looks good! 
+```
+
