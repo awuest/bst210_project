@@ -669,6 +669,31 @@ create_two_var_bar <- function(x_var, fill_var, x_label, fill_label) {
     ggtitle(paste(x_label, "stratified by", tolower(fill_label)))  
 }
 
+# creating function for two (continous) variable scatterplots plots
+create_two_scat <- function(x_var, x_label, y_var, y_label) {
+  h209red %>% 
+    ggplot(aes_(x = x_var, y=y_var)) +
+    geom_point() +
+    scale_fill_brewer(palette = "RdPu") +
+    labs(x = x_label, 
+         y = y_label) +
+    ggtitle(paste(y_label, " vs. ", x_label))  
+}
+
+# creating function for box plots
+create_two_scat <- function(x_var, x_label, y_var, y_label) {
+  h209red %>% 
+    ggplot(aes_(x = x_var, y=y_var)) +
+    geom_boxplot(notch=true) +
+    scale_fill_brewer(palette = "RdPu") +
+    labs(x = x_label, 
+         y = y_label) +
+    ggtitle(paste(y_label, " vs. ", x_label))  
+}
+
+```
+#bar plots demographics
+```{r}
 
 # bar plot of pap smear vs. race/ethnicity
 create_two_var_bar("pap_f", "race_f", "Pap smear status", "Race/ethnicity")
@@ -676,5 +701,43 @@ create_two_var_bar("pap_f", "race_f", "Pap smear status", "Race/ethnicity")
 # bar plot of pap smear vs. region
 create_two_var_bar("pap_f", "region_f", "Pap smear status", "Region")
 
-#bar plot of pap smear vs. 
+#bar plot of pap smear vs. maritial status
+create_two_var_bar("pap_f", "marital_stat_f", "Pap smear status", "Marital Status")
+
+#bar plot of pap smear vs. education
+create_two_var_bar("pap_f", "educ_f", "Pap smear status", "Education Status")
+
+#bar plot of pap smear vs. smoking
+create_two_var_bar("pap_f", "smoke_freq_f", "Pap smear status", "Smoking Status")
+```
+
+#models
+```{r}
+# cost related
+m1 <- glm(formula = pap_f ~ afford_care_f + inscov_gen_2018_f + income_indiv + income_fam + income_percpov, family="binomial", data = h209red)
+summary(m1)
+
+# accessibility related
+m2 <- glm(formula = pap_f ~limitation_f + have_usc_f + dist_from_usc_f + usc_offhrs_nw_f + rch_usc_byphn_f, family="binomial", data = h209red)
+summary(m2)
+
+# provider characteristics
+m3 <- glm(formula = pap_f ~ usc_asks_abt_trts_f + usc_asks_hlp_dec_f + usc_expln_options_f + usc_spk_lang_f , family="binomial", data = h209red)
+summary(m3)
+
+#demographics
+m4 <- glm(formula = pap_f ~ region_f , family="binomial", data = h209red)
+summary(m4)
+
+m4 <- glm(formula = pap_f ~  race_f , family="binomial", data = h209red)
+summary(m4)
+
+m4 <- glm(formula = pap_f ~  age , family="binomial", data = h209red)
+summary(m4)
+
+m4 <- glm(formula = pap_f ~ marital_stat_f, family="binomial", data = h209red)
+summary(m4)
+
+m4 <- glm(formula = pap_f ~ educ_f, family="binomial", data = h209red)
+summary(m4)
 ```
