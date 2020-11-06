@@ -62,6 +62,69 @@ h209red <- h209red %>%
   filter(age >= 21 & age <= 65) # filtering to women ages 21-65 (note there was 1 inapplicable person that was filtered out as a result of this but I thought that was fine)
 ```
 
+```{r}
+# re-calculating the mental and general health variables
+
+# perceived mental heath NA
+h209red$menhlth_rd1[h209red$menhlth_rd1 == -8 ]<- NA
+h209red$menhlth_rd1[h209red$menhlth_rd1 == -1 ]<- NA
+
+h209red$menhlth_rd2[h209red$menhlth_rd2 == -7 ]<- NA
+h209red$menhlth_rd2[h209red$menhlth_rd2 == -8 ]<- NA
+
+
+h209red$menhlth_rd3[h209red$menhlth_rd3 == -7 ]<- NA
+h209red$menhlth_rd3[h209red$menhlth_rd3 == -8 ]<- NA
+h209red$menhlth_rd3[h209red$menhlth_rd3 == -1 ]<- NA
+
+# perceived mental health (rounded average)
+h209red <- h209red %>% rowwise() %>%
+  mutate(menhlth_avg = round(mean(c(menhlth_rd1, menhlth_rd2, menhlth_rd3), na.rm=TRUE)))
+
+summary(h209red$menhlth_avg)
+
+# perceived mental health as factor (rounded average)
+h209red <- h209red %>% 
+  mutate(menhlth_avg_f = factor(menhlth_avg, 
+                                  levels = c("5", "4", "3", "2", "1"))) %>%
+  mutate(menhlth_avg_f = fct_recode(menhlth_avg_f,
+                                    "poor" = "5",
+                                    "fair" = "4",
+                                    "good" = "3",
+                                    "very good" = "2",
+                                    "excellent" = "1"))
+
+
+# re-calculating the general health variables
+
+# perceived general heath NA
+h209red$genhlth_rd1[h209red$genhlth_rd1 == -8 ]<- NA
+h209red$genhlth_rd1[h209red$genhlth_rd1 == -1 ]<- NA
+
+h209red$genhlth_rd2[h209red$genhlth_rd2 == -8 ]<- NA
+
+h209red$genhlth_rd3[h209red$genhlth_rd3 == -7 ]<- NA
+h209red$genhlth_rd3[h209red$genhlth_rd3 == -8 ]<- NA
+h209red$genhlth_rd3[h209red$genhlth_rd3 == -1 ]<- NA
+
+# perceived mental health (rounded average)
+h209red <- h209red %>% rowwise() %>%
+  mutate(genhlth_avg = round(mean(c(genhlth_rd1, genhlth_rd2, genhlth_rd3), na.rm=TRUE)))
+
+summary(h209red$genhlth_avg)
+
+# perceived mental health as factor (rounded average)
+h209red <- h209red %>% 
+  mutate(genhlth_avg_f = factor(genhlth_avg, 
+                                  levels = c("5", "4", "3", "2", "1"))) %>%
+  mutate(genhlth_avg = fct_recode(genhlth_avg_f,
+                                    "poor" = "5",
+                                    "fair" = "4",
+                                    "good" = "3",
+                                    "very good" = "2",
+                                    "excellent" = "1"))
+```
+
 ```{r recode_cat_variables}
 # creating factor versions of our categorical variables 
 
@@ -181,14 +244,15 @@ h209red <- h209red %>%
 # perceived general heath (1st round)
 h209red <- h209red %>% 
   mutate(genhlth_rd1_f = factor(genhlth_rd1, 
-                                levels = c("5", "4", "3", "2", "1", "-8"))) %>%
+                                levels = c("5", "4", "3", "2", "1", "-8", "-1"))) %>%
   mutate(genhlth_rd1_f = fct_recode(genhlth_rd1_f,
                                     "poor" = "5",
                                     "fair" = "4",
                                     "good" = "3",
                                     "very good" = "2",
                                     "excellent" = "1",
-                                    "did not answer" = "-8"))
+                                    "did not answer" = "-8",
+                                    "inapplicable" = "-1"))
 
 # perceived general heath (2nd round)
 h209red <- h209red %>% 
@@ -212,7 +276,10 @@ h209red <- h209red %>%
                                     "good" = "3",
                                     "very good" = "2",
                                     "excellent" = "1",
-                                    "did not answer" = "-8"))
+                                    "did not answer" = "-8",
+                                    "did not answer" = "-7"))
+
+# perceived avg general helath as factor
 
 # ability to afford care
 h209red <- h209red %>% 
@@ -252,7 +319,7 @@ h209red <- h209red %>%
                                       "no usc" = "-100",
                                       "did not answer" = "-8",
                                       "did not answer" = "-7",
-                                      "inapplicable" = "-1",))
+                                      "inapplicable" = "-1"))
 
 # ability to reach provider by phone
 h209red <- h209red %>% 
@@ -514,10 +581,11 @@ h209red <- h209red %>%
                                    NULL = "did not answer",
                                    NULL = "inapplicable"))
 
-# perceived mental health (2nd round)
+# perceived mental health
 h209red <- h209red %>% 
   mutate(menhlth_rd1_f = fct_recode(menhlth_rd1_f,
-                                    NULL = "did not answer"))
+                                    NULL = "did not answer",
+                                    NULL = "inapplicable"))
 h209red <- h209red %>% 
   mutate(menhlth_rd2_f = fct_recode(menhlth_rd2_f,
                                     NULL = "did not answer"))
@@ -594,104 +662,7 @@ h209red <- h209red %>%
 # no NAs
 ```
 
-```{r}
-# re-calculating the mental and general health variables
 
-# perceived mental health (rounded average)
-h209red <- h209red %>% rowwise() %>%
-  mutate(menhlth_avg = round(mean(c(menhlth_rd1, menhlth_rd2, menhlth_rd3), na.rm=TRUE)))
-
-summary(h209red$menhlth_avg)
-
-# perceived mental health as factor (rounded average)
-h209red <- h209red %>% 
-  mutate(menhlth_rd3_f = factor(menhlth_rd3, 
-                                  levels = c("5", "4", "3", "2", "1", "-8", "-7"))) %>%
-  mutate(menhlth_rd3_f = fct_recode(menhlth_rd3_f,
-                                    "poor" = "5",
-                                    "fair" = "4",
-                                    "good" = "3",
-                                    "very good" = "2",
-                                    "excellent" = "1",
-                                    "did not answer" = "-8",
-                                    "did not answer" = "-7"))
-
-# perceived general health (rounded average)
-h209red <- h209red %>% rowwise() %>%
-  mutate(genhlth_avg = mean(c(genhlth_rd1_f, genhlth_rd2_f, genhlth_rd3_f), na.rm=TRUE))
-
-summary(h209red$genhlth_avg)
-
-# perceived general health as factor (rounded average)
-h209red <- h209red %>% 
-  mutate(genhlth_rd3_f = factor(genhlth_rd3, 
-                                  levels = c("5", "4", "3", "2", "1", "-8", "-7"))) %>%
-  mutate(genhlth_rd3_f = fct_recode(genhlth_rd3_f,
-                                    "poor" = "5",
-                                    "fair" = "4",
-                                    "good" = "3",
-                                    "very good" = "2",
-                                    "excellent" = "1",
-                                    "did not answer" = "-8",
-                                    "did not answer" = "-7"))
-```
-
-
-```{r}
-# looking at pap smear variable
-h209red %>% 
-  ggplot(aes(x = pap_f)) +
-  geom_bar(aes(y = ..prop.., group = 1), 
-           stat = "count", 
-           fill = brewer.pal(n = 3, name = "RdPu"), 
-           width = 0.8) +
-  theme(axis.text = element_text(size = 9),
-        axis.title = element_text(size = 11)) +
-  scale_y_continuous(labels = scales::percent) +
-  labs(x = "Pap Smear", 
-       y = "Percentage") +
-  ggtitle("Pap smear status in last 5 years")
-
-# creating function for two (categorical) variable bar plots with percentages
-create_two_var_bar <- function(x_var, fill_var, x_label, fill_label) {
-  h209red %>% 
-    ggplot(aes_string(x = x_var, fill = fill_var)) +
-    geom_bar(position = "fill", width = 0.8) +
-    theme(axis.text = element_text(size = 9),
-          axis.title = element_text(size = 11),
-          legend.title = element_text(size = 11),
-          legend.text = element_text(size = 9)) +
-    scale_y_continuous(labels = scales::percent) +
-    scale_fill_brewer(palette = "RdPu") +
-    labs(x = x_label, 
-         y = "Percentage",
-         fill = fill_label) +
-    ggtitle(paste(x_label, "stratified by", tolower(fill_label)))  
-}
-
-# creating function for two (continous) variable scatterplots plots
-create_two_scat <- function(x_var, x_label, y_var, y_label) {
-  h209red %>% 
-    ggplot(aes_(x = x_var, y=y_var)) +
-    geom_point() +
-    scale_fill_brewer(palette = "RdPu") +
-    labs(x = x_label, 
-         y = y_label) +
-    ggtitle(paste(y_label, " vs. ", x_label))  
-}
-
-# creating function for box plots
-create_two_scat <- function(x_var, x_label, y_var, y_label) {
-  h209red %>% 
-    ggplot(aes_(x = x_var, y=y_var)) +
-    geom_boxplot(notch=true) +
-    scale_fill_brewer(palette = "RdPu") +
-    labs(x = x_label, 
-         y = y_label) +
-    ggtitle(paste(y_label, " vs. ", x_label))  
-}
-
-```
 #bar plots demographics
 ```{r}
 
@@ -710,6 +681,7 @@ create_two_var_bar("pap_f", "educ_f", "Pap smear status", "Education Status")
 #bar plot of pap smear vs. smoking
 create_two_var_bar("pap_f", "smoke_freq_f", "Pap smear status", "Smoking Status")
 ```
+
 
 #models
 ```{r}
@@ -740,4 +712,19 @@ summary(m4)
 
 m4 <- glm(formula = pap_f ~ educ_f, family="binomial", data = h209red)
 summary(m4)
+```
+
+#backward selection
+```{r}
+library(caret)
+library(leaps)
+
+full.model <- glm(formula = pap_f ~ region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + income_indiv + income_fam + income_percpov + menhlth_avg + genhlth_avg + limitation_f + afford_care_f + have_usc_f + dist_from_usc_f +rch_usc_byphn_f + usc_offhrs_nw_f + usc_asks_abt_trts_f + usc_asks_hlp_dec_f + usc_expln_options_f + inscov_gen_2018_f + totexp + outofpocket_exp , family = "binomial", data=h209red)
+
+#backward selection
+step.model <- stepAIC(full.model, direction="backward", trace=FALSE)
+summary(step.model)
+
+set.seed(56)
+train.contro <- trainControl(method = "cv", number = )
 ```
