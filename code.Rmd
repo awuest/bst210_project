@@ -137,6 +137,18 @@ h209red <- h209red %>%
                                    "did not answer" = "-8",
                                    "did not answer" = "-7",
                                    "inapplicable" = "-1"))
+# perceived mental health (1st round)
+h209red <- h209red %>% 
+  mutate(menhlth_rd1_f = factor(menhlth_rd1, 
+                                  levels = c("5", "4", "3", "2", "1", "-8", "-7"))) %>%
+  mutate(menhlth_rd1_f = fct_recode(menhlth_rd1_f,
+                                    "poor" = "5",
+                                    "fair" = "4",
+                                    "good" = "3",
+                                    "very good" = "2",
+                                    "excellent" = "1",
+                                    "did not answer" = "-8",
+                                    "did not answer" = "-7"))
 
 # perceived mental health (2nd round)
 h209red <- h209red %>% 
@@ -151,12 +163,50 @@ h209red <- h209red %>%
                                     "did not answer" = "-8",
                                     "did not answer" = "-7"))
 
+# perceived mental health (3rd round)
+h209red <- h209red %>% 
+  mutate(menhlth_rd3_f = factor(menhlth_rd3, 
+                                  levels = c("5", "4", "3", "2", "1", "-8", "-7"))) %>%
+  mutate(menhlth_rd3_f = fct_recode(menhlth_rd3_f,
+                                    "poor" = "5",
+                                    "fair" = "4",
+                                    "good" = "3",
+                                    "very good" = "2",
+                                    "excellent" = "1",
+                                    "did not answer" = "-8",
+                                    "did not answer" = "-7"))
+
+
+
+# perceived general heath (1st round)
+h209red <- h209red %>% 
+  mutate(genhlth_rd1_f = factor(genhlth_rd1, 
+                                levels = c("5", "4", "3", "2", "1", "-8"))) %>%
+  mutate(genhlth_rd1_f = fct_recode(genhlth_rd1_f,
+                                    "poor" = "5",
+                                    "fair" = "4",
+                                    "good" = "3",
+                                    "very good" = "2",
+                                    "excellent" = "1",
+                                    "did not answer" = "-8"))
 
 # perceived general heath (2nd round)
 h209red <- h209red %>% 
   mutate(genhlth_rd2_f = factor(genhlth_rd2, 
                                 levels = c("5", "4", "3", "2", "1", "-8"))) %>%
   mutate(genhlth_rd2_f = fct_recode(genhlth_rd2_f,
+                                    "poor" = "5",
+                                    "fair" = "4",
+                                    "good" = "3",
+                                    "very good" = "2",
+                                    "excellent" = "1",
+                                    "did not answer" = "-8"))
+
+# perceived general heath (3rd round)
+h209red <- h209red %>% 
+  mutate(genhlth_rd3_f = factor(genhlth_rd3, 
+                                levels = c("5", "4", "3", "2", "1", "-8"))) %>%
+  mutate(genhlth_rd3_f = fct_recode(genhlth_rd3_f,
                                     "poor" = "5",
                                     "fair" = "4",
                                     "good" = "3",
@@ -466,7 +516,13 @@ h209red <- h209red %>%
 
 # perceived mental health (2nd round)
 h209red <- h209red %>% 
+  mutate(menhlth_rd1_f = fct_recode(menhlth_rd1_f,
+                                    NULL = "did not answer"))
+h209red <- h209red %>% 
   mutate(menhlth_rd2_f = fct_recode(menhlth_rd2_f,
+                                    NULL = "did not answer"))
+h209red <- h209red %>% 
+  mutate(menhlth_rd3_f = fct_recode(menhlth_rd3_f,
                                     NULL = "did not answer"))
 
 # perceived general heath (2nd round)
@@ -539,6 +595,49 @@ h209red <- h209red %>%
 ```
 
 ```{r}
+# re-calculating the mental and general health variables
+
+# perceived mental health (rounded average)
+h209red <- h209red %>% rowwise() %>%
+  mutate(menhlth_avg = round(mean(c(menhlth_rd1, menhlth_rd2, menhlth_rd3), na.rm=TRUE)))
+
+summary(h209red$menhlth_avg)
+
+# perceived mental health as factor (rounded average)
+h209red <- h209red %>% 
+  mutate(menhlth_rd3_f = factor(menhlth_rd3, 
+                                  levels = c("5", "4", "3", "2", "1", "-8", "-7"))) %>%
+  mutate(menhlth_rd3_f = fct_recode(menhlth_rd3_f,
+                                    "poor" = "5",
+                                    "fair" = "4",
+                                    "good" = "3",
+                                    "very good" = "2",
+                                    "excellent" = "1",
+                                    "did not answer" = "-8",
+                                    "did not answer" = "-7"))
+
+# perceived general health (rounded average)
+h209red <- h209red %>% rowwise() %>%
+  mutate(genhlth_avg = mean(c(genhlth_rd1_f, genhlth_rd2_f, genhlth_rd3_f), na.rm=TRUE))
+
+summary(h209red$genhlth_avg)
+
+# perceived general health as factor (rounded average)
+h209red <- h209red %>% 
+  mutate(genhlth_rd3_f = factor(genhlth_rd3, 
+                                  levels = c("5", "4", "3", "2", "1", "-8", "-7"))) %>%
+  mutate(genhlth_rd3_f = fct_recode(genhlth_rd3_f,
+                                    "poor" = "5",
+                                    "fair" = "4",
+                                    "good" = "3",
+                                    "very good" = "2",
+                                    "excellent" = "1",
+                                    "did not answer" = "-8",
+                                    "did not answer" = "-7"))
+```
+
+
+```{r}
 # looking at pap smear variable
 h209red %>% 
   ggplot(aes(x = pap_f)) +
@@ -570,10 +669,12 @@ create_two_var_bar <- function(x_var, fill_var, x_label, fill_label) {
     ggtitle(paste(x_label, "stratified by", tolower(fill_label)))  
 }
 
+
 # bar plot of pap smear vs. race/ethnicity
 create_two_var_bar("pap_f", "race_f", "Pap smear status", "Race/ethnicity")
 
 # bar plot of pap smear vs. region
 create_two_var_bar("pap_f", "region_f", "Pap smear status", "Region")
-```
 
+#bar plot of pap smear vs. 
+```
