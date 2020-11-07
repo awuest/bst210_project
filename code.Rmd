@@ -719,12 +719,10 @@ summary(m4)
 library(caret)
 library(leaps)
 
-full.model <- glm(formula = pap_f ~ region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + income_indiv + income_fam + income_percpov + menhlth_avg + genhlth_avg + limitation_f + afford_care_f + have_usc_f + dist_from_usc_f +rch_usc_byphn_f + usc_offhrs_nw_f + usc_asks_abt_trts_f + usc_asks_hlp_dec_f + usc_expln_options_f + inscov_gen_2018_f + totexp + outofpocket_exp , family = "binomial", data=h209red)
+mod1 <-glm(pap_f~., family = "binomial", data=h209red)
+full.model <- glm(formula = pap_f ~ region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + income_indiv + income_fam + income_percpov + menhlth_avg + genhlth_avg + limitation_f + afford_care_f + have_usc_f + dist_from_usc_f +rch_usc_byphn_f + usc_offhrs_nw_f + usc_asks_abt_trts_f + usc_asks_hlp_dec_f + usc_expln_options_f + inscov_gen_2018_f + totexp + outofpocket_exp , family = "binomial", data=mod1$model)
 
-#backward selection
-step.model <- stepAIC(full.model, direction="backward", trace=FALSE)
-summary(step.model)
 
-set.seed(56)
-train.contro <- trainControl(method = "cv", number = )
+mod_back <- step(full.model, direction = "backward", na.rm=TRUE)
+summary(mod_back)
 ```
