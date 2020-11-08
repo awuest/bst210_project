@@ -63,6 +63,21 @@ h209red <- h209red %>%
 ```
 
 ```{r}
+## inputting NAs into hours worked variables
+h209red$hrsworked_rd1[h209red$hrsworked_rd1 == -1] <- NA
+h209red$hrsworked_rd2[h209red$hrsworked_rd2 == -1] <- NA
+h209red$hrsworked_rd3[h209red$hrsworked_rd3 == -1] <- NA
+
+# hours worked (rounded average)
+h209red <- h209red %>% rowwise() %>%
+  mutate(hrs_worked_avg = round(mean(c(hrsworked_rd1, hrsworked_rd2, hrsworked_rd3), na.rm = TRUE)))
+
+h209red$hrs_worked_avg[is.nan(as.numeric(h209red$hrs_worked_avg))] <- NA
+
+summary(h209red$hrs_worked_avg) # too many missing variables to use
+```
+
+```{r}
 # re-calculating the mental and general health variables
 
 # perceived mental heath NA
@@ -71,7 +86,6 @@ h209red$menhlth_rd1[h209red$menhlth_rd1 == -1 ]<- NA
 
 h209red$menhlth_rd2[h209red$menhlth_rd2 == -7 ]<- NA
 h209red$menhlth_rd2[h209red$menhlth_rd2 == -8 ]<- NA
-
 
 h209red$menhlth_rd3[h209red$menhlth_rd3 == -7 ]<- NA
 h209red$menhlth_rd3[h209red$menhlth_rd3 == -8 ]<- NA
@@ -86,7 +100,7 @@ summary(h209red$menhlth_avg)
 # perceived mental health as factor (rounded average)
 h209red <- h209red %>% 
   mutate(menhlth_avg_f = factor(menhlth_avg, 
-                                  levels = c("5", "4", "3", "2", "1"))) %>%
+                                levels = c("5", "4", "3", "2", "1"))) %>%
   mutate(menhlth_avg_f = fct_recode(menhlth_avg_f,
                                     "poor" = "5",
                                     "fair" = "4",
@@ -98,14 +112,14 @@ h209red <- h209red %>%
 # re-calculating the general health variables
 
 # perceived general heath NA
-h209red$genhlth_rd1[h209red$genhlth_rd1 == -8 ]<- NA
-h209red$genhlth_rd1[h209red$genhlth_rd1 == -1 ]<- NA
+h209red$genhlth_rd1[h209red$genhlth_rd1 == -8 ] <- NA
+h209red$genhlth_rd1[h209red$genhlth_rd1 == -1 ] <- NA
 
-h209red$genhlth_rd2[h209red$genhlth_rd2 == -8 ]<- NA
+h209red$genhlth_rd2[h209red$genhlth_rd2 == -8 ] <- NA
 
-h209red$genhlth_rd3[h209red$genhlth_rd3 == -7 ]<- NA
-h209red$genhlth_rd3[h209red$genhlth_rd3 == -8 ]<- NA
-h209red$genhlth_rd3[h209red$genhlth_rd3 == -1 ]<- NA
+h209red$genhlth_rd3[h209red$genhlth_rd3 == -7 ] <- NA
+h209red$genhlth_rd3[h209red$genhlth_rd3 == -8 ] <- NA
+h209red$genhlth_rd3[h209red$genhlth_rd3 == -1 ] <- NA
 
 # perceived mental health (rounded average)
 h209red <- h209red %>% rowwise() %>%
@@ -113,20 +127,22 @@ h209red <- h209red %>% rowwise() %>%
 
 summary(h209red$genhlth_avg)
 
-# perceived mental health as factor (rounded average)
+# perceived general health as factor (rounded average)
 h209red <- h209red %>% 
   mutate(genhlth_avg_f = factor(genhlth_avg, 
-                                  levels = c("5", "4", "3", "2", "1"))) %>%
-  mutate(genhlth_avg = fct_recode(genhlth_avg_f,
-                                    "poor" = "5",
-                                    "fair" = "4",
-                                    "good" = "3",
-                                    "very good" = "2",
-                                    "excellent" = "1"))
+                                levels = c("5", "4", "3", "2", "1"))) %>%
+  mutate(genhlth_avg_f = fct_recode(genhlth_avg_f,
+                                   "poor" = "5",
+                                   "fair" = "4",
+                                   "good" = "3",
+                                   "very good" = "2",
+                                   "excellent" = "1"))
+
+
 ```
 
-```{r recode_cat_variables}
-# creating factor versions of our categorical variables 
+```{r}
+# creating factor versions of other categorical variables 
 
 # pap status
 h209red <- h209red %>% 
@@ -135,7 +151,7 @@ h209red <- h209red %>%
   mutate(pap_f = fct_recode(pap_f, 
                             "yes" = "1",
                             "no" = "2",
-                            "cannot be computed" = "-15"))
+                            NULL = "-15"))
 
 # region
 h209red <- h209red %>% 
@@ -175,8 +191,8 @@ h209red <- h209red %>%
                                "none or any elementary" = c("0", "1", "2", "3", "4", "5", "6", "7", "8"),
                                "any high school" = c("9", "10", "11", "12"),
                                "any college" = c("13", "14", "15", "16", "17"),
-                               "cannot be computed" = "-15",
-                               "did not answer" = c("-8", "-7"))) 
+                               NULL = "-15",
+                               NULL = c("-8", "-7"))) 
   
 # smoking frequency
 h209red <- h209red %>% 
@@ -186,9 +202,9 @@ h209red <- h209red %>%
                                    "never" = "3", 
                                    "some days" = "2", 
                                    "every day" = "1", 
-                                   "did not answer" = "-8", 
-                                   "did not answer" = "-7", 
-                                   "inapplicable" = "-1"))
+                                   NULL = "-8", 
+                                   NULL = "-7", 
+                                   NULL = "-1"))
 
 # limitation
 h209red <- h209red %>% 
@@ -197,89 +213,10 @@ h209red <- h209red %>%
   mutate(limitation_f = fct_recode(limitation_f,
                                    "no" = "2", 
                                    "yes" = "1",
-                                   "did not answer" = "-8",
-                                   "did not answer" = "-7",
-                                   "inapplicable" = "-1"))
-# perceived mental health (1st round)
-h209red <- h209red %>% 
-  mutate(menhlth_rd1_f = factor(menhlth_rd1, 
-                                  levels = c("5", "4", "3", "2", "1", "-8", "-7"))) %>%
-  mutate(menhlth_rd1_f = fct_recode(menhlth_rd1_f,
-                                    "poor" = "5",
-                                    "fair" = "4",
-                                    "good" = "3",
-                                    "very good" = "2",
-                                    "excellent" = "1",
-                                    "did not answer" = "-8",
-                                    "did not answer" = "-7"))
+                                   NULL = "-8",
+                                   NULL = "-7",
+                                   NULL = "-1"))
 
-# perceived mental health (2nd round)
-h209red <- h209red %>% 
-  mutate(menhlth_rd2_f = factor(menhlth_rd2, 
-                                  levels = c("5", "4", "3", "2", "1", "-8", "-7"))) %>%
-  mutate(menhlth_rd2_f = fct_recode(menhlth_rd2_f,
-                                    "poor" = "5",
-                                    "fair" = "4",
-                                    "good" = "3",
-                                    "very good" = "2",
-                                    "excellent" = "1",
-                                    "did not answer" = "-8",
-                                    "did not answer" = "-7"))
-
-# perceived mental health (3rd round)
-h209red <- h209red %>% 
-  mutate(menhlth_rd3_f = factor(menhlth_rd3, 
-                                  levels = c("5", "4", "3", "2", "1", "-8", "-7"))) %>%
-  mutate(menhlth_rd3_f = fct_recode(menhlth_rd3_f,
-                                    "poor" = "5",
-                                    "fair" = "4",
-                                    "good" = "3",
-                                    "very good" = "2",
-                                    "excellent" = "1",
-                                    "did not answer" = "-8",
-                                    "did not answer" = "-7"))
-
-
-
-# perceived general heath (1st round)
-h209red <- h209red %>% 
-  mutate(genhlth_rd1_f = factor(genhlth_rd1, 
-                                levels = c("5", "4", "3", "2", "1", "-8", "-1"))) %>%
-  mutate(genhlth_rd1_f = fct_recode(genhlth_rd1_f,
-                                    "poor" = "5",
-                                    "fair" = "4",
-                                    "good" = "3",
-                                    "very good" = "2",
-                                    "excellent" = "1",
-                                    "did not answer" = "-8",
-                                    "inapplicable" = "-1"))
-
-# perceived general heath (2nd round)
-h209red <- h209red %>% 
-  mutate(genhlth_rd2_f = factor(genhlth_rd2, 
-                                levels = c("5", "4", "3", "2", "1", "-8"))) %>%
-  mutate(genhlth_rd2_f = fct_recode(genhlth_rd2_f,
-                                    "poor" = "5",
-                                    "fair" = "4",
-                                    "good" = "3",
-                                    "very good" = "2",
-                                    "excellent" = "1",
-                                    "did not answer" = "-8"))
-
-# perceived general heath (3rd round)
-h209red <- h209red %>% 
-  mutate(genhlth_rd3_f = factor(genhlth_rd3, 
-                                levels = c("5", "4", "3", "2", "1", "-8"))) %>%
-  mutate(genhlth_rd3_f = fct_recode(genhlth_rd3_f,
-                                    "poor" = "5",
-                                    "fair" = "4",
-                                    "good" = "3",
-                                    "very good" = "2",
-                                    "excellent" = "1",
-                                    "did not answer" = "-8",
-                                    "did not answer" = "-7"))
-
-# perceived avg general helath as factor
 
 # ability to afford care
 h209red <- h209red %>% 
@@ -288,9 +225,8 @@ h209red <- h209red %>%
   mutate(afford_care_f = fct_recode(afford_care_f,
                                     "no" = "2",
                                     "yes" = "1",
-                                    "did not answer" = "-8",
-                                    "did not answer" = "-7"))
-
+                                    NULL = "-8",
+                                    NULL = "-7"))
 
 # usual source of care status
 h209red <- h209red %>% 
@@ -299,8 +235,8 @@ h209red <- h209red %>%
   mutate(have_usc_f = fct_recode(have_usc_f,
                                  "no" = "2",
                                  "yes" = "1",
-                                 "did not answer" = "-8",
-                                 "did not answer" = "-7"))
+                                 NULL = "-8",
+                                 NULL = "-7"))
 
 # distance from provider
 h209red <- h209red %>% 
@@ -317,9 +253,9 @@ h209red <- h209red %>%
                                       "91 to 120" = "5",
                                       ">120" = "6",
                                       "no usc" = "-100",
-                                      "did not answer" = "-8",
-                                      "did not answer" = "-7",
-                                      "inapplicable" = "-1"))
+                                      NULL = "-8",
+                                      NULL = "-7",
+                                      NULL = "-1"))
 
 # ability to reach provider by phone
 h209red <- h209red %>% 
@@ -334,9 +270,9 @@ h209red <- h209red %>%
                                       "somewhat difficult" = "2",
                                       "very difficult" = "1",
                                       "no usc" = "-100",
-                                      "did not answer" = "-8",
-                                      "did not answer" = "-7",
-                                      "inapplicable" = "-1"))
+                                      NULL = "-8",
+                                      NULL = "-7",
+                                      NULL = "-1"))
 
 # provider offers office hours during nights/weekends
 h209red <- h209red %>% 
@@ -349,10 +285,9 @@ h209red <- h209red %>%
                                       "no usc" = "-100",
                                       "no" = "2",
                                       "yes" = "1",
-                                      "did not answer" = "-8",
-                                      "did not answer" = "-7",
-                                      "inapplicable" = "-1"))
-
+                                      NULL = "-8",
+                                      NULL = "-7",
+                                      NULL = "-1"))
 # provider asks about treatments
 h209red <- h209red %>% 
   mutate(usc_asks_abt_trts = ifelse(have_usc_f == "no", 
@@ -364,9 +299,9 @@ h209red <- h209red %>%
                                           "no usc" = "-100",
                                           "no" = "2",
                                           "yes" = "1",
-                                          "did not answer" = "-8",
-                                          "did not answer" = "-7",
-                                          "inapplicable" = "-1"))
+                                          NULL = "-8",
+                                          NULL = "-7",
+                                          NULL = "-1"))
 
 # provider asks person to help make decisions
 h209red <- h209red %>% 
@@ -381,9 +316,9 @@ h209red <- h209red %>%
                                          "sometimes" = "2",
                                          "usually" = "3",
                                          "always" = "4",
-                                         "did not answer" = "-8",
-                                         "did not answer" = "-7",
-                                         "inapplicable" = "-1"))
+                                         NULL = "-8",
+                                         NULL = "-7",
+                                         NULL = "-1"))
 
 # provider presents and explains all options
 h209red <- h209red %>% 
@@ -396,38 +331,9 @@ h209red <- h209red %>%
                                           "no usc" = "-100",
                                           "no" = "2",
                                           "yes" = "1",
-                                          "did not answer" = "-8",
-                                          "did not answer" = "-7",
-                                          "inapplicable" = "-1"))
-
-# provider speaks person's language
-h209red <- h209red %>% 
-  mutate(usc_spk_lang = ifelse(have_usc_f == "no", 
-                               -100, 
-                               usc_spk_lang)) %>% # creating level for not having a provider
-  mutate(usc_spk_lang_f = factor(usc_spk_lang, 
-                                 levels = c("-100", "2", "1", "-8", "-7", "-1"))) %>%
-  mutate(usc_spk_lang_f = fct_recode(usc_spk_lang_f,
-                                     "no usc" = "-100",
-                                     "no" = "2",
-                                     "yes" = "1",
-                                     "did not answer" = "-8",
-                                     "did not answer" = "-7",
-                                     "inapplicable" = "-1"))
-
-# gender of provider
-h209red <- h209red %>% 
-  mutate(usc_gender = ifelse(have_usc_f == "no", 
-                             -100, 
-                             usc_gender)) %>% # creating level for not having a provider
-  mutate(usc_gender_f = factor(usc_gender, 
-                               levels = c("1", "2", "-100", "-8", "-1"))) %>%
-  mutate(usc_gender_f = fct_recode(usc_gender_f,
-                                   "male" = "1",
-                                   "female" = "2",
-                                   "no usc" = "-100",
-                                   "did not answer" = "-8",
-                                   "inapplicable" = "-1"))
+                                          NULL = "-8",
+                                          NULL = "-7",
+                                          NULL = "-1"))
 
 # insurance indicator in 2018
 h209red <- h209red %>% 
@@ -439,232 +345,162 @@ h209red <- h209red %>%
                                         "uninsured" = "3"))
 ```
 
+```{r}
+# creating combined provider availability variable using 1) distance 2) ability to reach by phone 3) office hours
+
+h209red <- h209red %>% 
+  mutate(dist_from_usc = ifelse(have_usc_f == "no", 0, dist_from_usc))
+h209red$dist_from_usc[h209red$dist_from_usc == -8] <- NA
+h209red$dist_from_usc[h209red$dist_from_usc == -7] <- NA
+
+h209red <- h209red %>% 
+  mutate(rch_usc_byphn = ifelse(have_usc_f == "no", 0, rch_usc_byphn))
+h209red$rch_usc_byphn[h209red$rch_usc_byphn == -8] <- NA
+h209red$rch_usc_byphn[h209red$rch_usc_byphn == -7] <- NA
+
+h209red <- h209red %>% 
+  mutate(usc_offhrs_nw = ifelse(have_usc_f == "no", 0, usc_offhrs_nw))
+h209red$usc_offhrs_nw[h209red$usc_offhrs_nw == -8] <- NA
+h209red$usc_offhrs_nw[h209red$usc_offhrs_nw == -7] <- NA
+h209red$usc_offhrs_nw[h209red$usc_offhrs_nw == -1] <- NA
+
+# creating binary access variables to use for making combined score
+
+# give 0 to those w/o provider
+# give 1 to people who have to travel 30+ minutes
+# and give 2 to people who are within 30 min
+h209red <- h209red %>% mutate(dist_from_usc_bin = ifelse(dist_from_usc %in% c(1, 2), 2,
+                                                         ifelse(dist_from_usc %in% c(3, 4, 5, 6), 1,
+                                                                dist_from_usc)))
+
+# give 0 to those w/o provider
+# and give 1 to people who answer somewhat difficult or very difficult 
+# give 2 to people who answer not at all difficult or not too difficult
+h209red <- h209red %>% mutate(rch_usc_byphn_bin = ifelse(rch_usc_byphn %in% c(1, 2), 1,
+                                                         ifelse(rch_usc_byphn %in% c(3, 4, 5, 6), 2,
+                                                                rch_usc_byphn)))
+
+# give 0 to those w/o provider
+# and give 1 to people whose provider does not offer office hours during night/weekend 
+# give 2 to people whose provider does offer
+h209red <- h209red %>% mutate(usc_offhrs_nw_bin = ifelse(usc_offhrs_nw == 1, 2,
+                                                         ifelse(usc_offhrs_nw == 2, 1,
+                                                                usc_offhrs_nw)))
+
+# finally creating combined availability score from binary variables
+h209red <- h209red %>% 
+  mutate(usc_access_score = dist_from_usc_bin + rch_usc_byphn_bin + usc_offhrs_nw_bin)
+```
 
 ```{r}
-# checking if any variables will be too problematic (in terms of missing values) to use 
+# creating combined provider satisfaction variable using 1) asking about treatments 2) asks person to help w/ decisions 3) explains all options
+
+h209red <- h209red %>% 
+  mutate(usc_asks_abt_trts = ifelse(have_usc_f == "no", 0, usc_asks_abt_trts))
+h209red$usc_asks_abt_trts[h209red$usc_asks_abt_trts == -8] <- NA
+h209red$usc_asks_abt_trts[h209red$usc_asks_abt_trts == -7] <- NA
+
+h209red <- h209red %>% 
+   mutate(usc_asks_hlp_dec = ifelse(have_usc_f == "no", 0, usc_asks_hlp_dec)) 
+h209red$usc_asks_hlp_dec[h209red$usc_asks_hlp_dec == -8] <- NA
+h209red$usc_asks_hlp_dec[h209red$usc_asks_hlp_dec == -7] <- NA
+
+h209red <- h209red %>% 
+  mutate(usc_expln_options = ifelse(have_usc_f == "no", 0, usc_expln_options))
+h209red$usc_expln_options[h209red$usc_expln_options == -8] <- NA
+h209red$usc_expln_options[h209red$usc_expln_options == -7] <- NA
 
 
-# pap smear variable
-table(h209red$pap_f) # about 600 that weren't able to be computed
+# creating binary access variables to use for making combined score
 
+# give 0 to those w/o provider
+# give 1 to those who answered no
+# and give 2 to those who answered yes
+h209red <- h209red %>% mutate(usc_asks_abt_trts_bin = ifelse(usc_asks_abt_trts == 1, 2,
+                                                             ifelse(usc_asks_abt_trts == 2, 1,
+                                                                    usc_asks_abt_trts)))
 
-# demographic variables
-# region
-table(h209red$region_f) # looks good!
-# race
-table(h209red$race_f) # looks good!
-# age
-h209red %>% filter(age < 0) %>% summarise(n = n()) # looks good!
-# marital status
-table(h209red$marital_stat_f) # looks good
-# education level
-table(h209red$educ_f)
+# give 0 to those w/o provider
+# and give 1 to those who answered never or sometimes
+# give 2 to those who answered usually or always
+h209red <- h209red %>% mutate(usc_asks_hlp_dec_bin = ifelse(usc_asks_hlp_dec %in% c(1, 2), 1,
+                                                            ifelse(usc_asks_hlp_dec %in% c(3, 4), 2,
+                                                                   usc_asks_hlp_dec)))
 
+# give 0 to those w/o provider
+# and give 1 to people who answer no
+# give 2 to those who answered yes
+h209red <- h209red %>% mutate(usc_expln_options_bin = ifelse(usc_expln_options == 1, 2,
+                                                             ifelse(usc_expln_options == 2, 1,
+                                                                    usc_expln_options)))
 
-# smoking variable
-table(h209red$smoke_freq_f) # only a few missing
-
-
-# income variables
-# individual income
-h209red %>% filter(income_indiv < 0) %>% summarise(n = n())
-# family income
-h209red %>% filter(income_fam < 0) %>% summarise(n = n())
-# family income as percent of poverty line
-h209red %>% filter(income_percpov < 0) %>% summarise(n = n())
-# in all of these we have some negative incomes but no missing ones!
-
-
-# hours worked variable
-h209red$hrsworked_rd1[h209red$hrsworked_rd1 == -1] <- NA
-h209red$hrsworked_rd2[h209red$hrsworked_rd2 == -1] <- NA
-h209red$hrsworked_rd3[h209red$hrsworked_rd3 == -1] <- NA
-
-
-# limitation variable
-table(h209red$limitation_f) # only a few missing
-
-
-# health variables
-# mental health
-table(h209red$menhlth_rd2_f) # use second round analysis 
-# general health
-table(h209red$genhlth_rd2_f) # use second round in analysis 
-
-
-# expenditure variables
-# total exp 
-h209red %>% filter(totexp < 0) %>% summarise(n = n()) # no missing
-# out of pocket 
-h209red %>% filter(outofpocket_exp < 0) %>% summarise(n = n()) # no missing
-# ability to afford care
-table(h209red$afford_care_f) # only a few missing
-
-
-# access and provider satisfaction variables
-table(h209red$have_usc_f)
-table(h209red$dist_from_usc_f)
-table(h209red$rch_usc_byphn_f)
-table(h209red$usc_offhrs_nw_f)
-table(h209red$usc_asks_abt_trts_f)
-table(h209red$usc_asks_hlp_dec_f)
-table(h209red$usc_expln_options_f)
-# these have a few missing values (some variables more than others)
-
-
-# variable for if provider speaks person's language 
-table(h209red$usc_spk_lang_f) # we see a lot of inapplicables
-# according to code book "PRVSPK42 is set to a value other than ‘-1’ (Inapplicable) for persons eligible for the 
-# Access to Care supplement, who had a usual source of care, and were identified as speaking a language 
-# other than English at home (OTHLANG = ‘1’) and speaking English either “Not Well” or “Not at All” 
-# (HWELLSPK = ‘3’ or ‘4’). PRVSPK42 is set to ‘-1’ (Inapplicable) for all persons not meeting these 
-# criteria or who were deceased, institutionalized, or younger than 5 years of age.
-# I think it may be difficult to deal with since it seems to be dependent on a few other variables and we'd have to load 
-# those extra variables in to be able to create a usable variable  with levels for 
-# "inapplicable", "native english speaker", "answers yes", "answers no"
-
-
-# gender of provider
-table(h209red$usc_gender_f) 
-# seems to be too many people skipped for this variable to be used
-
-
-# insurance coverage variable
-table(h209red$inscov_gen_2018_f) # looks good! 
+# finally creating combined satisfaction score from binary variables
+h209red <- h209red %>% 
+  mutate(usc_satisf_score = usc_asks_abt_trts_bin + usc_asks_hlp_dec_bin + usc_expln_options_bin)
 ```
 
 
-```{r}
-# inserting NAs into variables 
+```{r, include = FALSE}
+# extra code for variables that have too many missing values and shouldn't be used
 
-# pap status
-h209red <- h209red %>% 
-  mutate(pap_f = fct_recode(pap_f,
-                            NULL = "cannot be computed"))
-
-# region
-# no NAs 
-
-# race
-# no NAs
-
-# age
-# no NAs
-
-# marital status
-# no NAs
-
-# education
-h209red <- h209red %>% 
-  mutate(educ_f = fct_recode(educ_f,
-                            NULL = "cannot be computed"))
-
-# smoking frequency
-h209red <- h209red %>% 
-  mutate(smoke_freq_f = fct_recode(smoke_freq_f,
-                                   NULL = "did not answer",
-                                   NULL = "inapplicable"))
-
-
-# income variables
-# in all 3 of these we have some negative incomes but no missing ones
-# should we make the negative ones missing values???
-
-# hours worked
-h209red %>% filter(hrsworked_rd1 < 0) %>% summarise(n = n()) 
-h209red %>% filter(hrsworked_rd2 < 0) %>% summarise(n = n()) 
-h209red %>% filter(hrsworked_rd3 < 0) %>% summarise(n = n()) 
-
-# limitation
-h209red <- h209red %>% 
-  mutate(limitation_f = fct_recode(limitation_f,
-                                   NULL = "did not answer",
-                                   NULL = "inapplicable"))
-
-# perceived mental health
-h209red <- h209red %>% 
-  mutate(menhlth_rd1_f = fct_recode(menhlth_rd1_f,
-                                    NULL = "did not answer",
-                                    NULL = "inapplicable"))
-h209red <- h209red %>% 
-  mutate(menhlth_rd2_f = fct_recode(menhlth_rd2_f,
-                                    NULL = "did not answer"))
-h209red <- h209red %>% 
-  mutate(menhlth_rd3_f = fct_recode(menhlth_rd3_f,
-                                    NULL = "did not answer"))
-
-# perceived general heath (2nd round)
-h209red <- h209red %>% 
-  mutate(genhlth_rd2_f = fct_recode(genhlth_rd2_f,
-                                    NULL = "did not answer"))
-
-# total exp 
-# no NAs
-
-# out of pocket 
-# no NAs
-
-# ability to afford care
-h209red <- h209red %>% 
-  mutate(afford_care_f = fct_recode(afford_care_f,
-                                    NULL = "did not answer"))
-
-# usual source of care status
-h209red <- h209red %>% 
-  mutate(have_usc_f = fct_recode(have_usc_f,
-                                 NULL = "did not answer"))
-
-# distance from provider
-h209red <- h209red %>% 
-  mutate(dist_from_usc_f = fct_recode(dist_from_usc_f,
-                                      NULL = "did not answer",
-                                      NULL ="inapplicable"))
-
-# ability to reach provider by phone
-h209red <- h209red %>% 
-  mutate(rch_usc_byphn_f = fct_recode(rch_usc_byphn_f,
-                                      NULL = "did not answer",
-                                      NULL = "inapplicable"))
-
-
-# provider offers office hours during nights/weekends
-h209red <- h209red %>% 
-  mutate(usc_offhrs_nw_f = fct_recode(usc_offhrs_nw_f,
-                                      NULL = "did not answer",
-                                      NULL = "inapplicable"))
-
-
-# provider asks about treatments
-h209red <- h209red %>% 
-  mutate(usc_asks_abt_trts_f = fct_recode(usc_asks_abt_trts_f,
-                                          NULL = "did not answer",
-                                          NULL = "inapplicable"))
-
-# provider asks person to help make decisions
-h209red <- h209red %>% 
-  mutate(usc_asks_hlp_dec_f = fct_recode(usc_asks_hlp_dec_f,
-                                         NULL = "did not answer",
-                                         NULL = "inapplicable"))
-
-# provider presents and explains all options
-h209red <- h209red %>% 
-  mutate(usc_expln_options_f = fct_recode(usc_expln_options_f,
-                                          NULL = "did not answer",
-                                          NULL = "inapplicable"))
+# provider speaks person's language 
+#h209red <- h209red %>% 
+  #mutate(usc_spk_lang = ifelse(have_usc_f == "no", 
+                               #-100, 
+                               #usc_spk_lang)) %>% 
+  #mutate(usc_spk_lang_f = factor(usc_spk_lang, 
+                                 #levels = c("-100", "2", "1", "-8", "-7", "-1"))) %>%
+  #mutate(usc_spk_lang_f = fct_recode(usc_spk_lang_f,
+                                     #"no usc" = "-100",
+                                     #"no" = "2",
+                                     #"yes" = "1",
+                                     #NULL = "-8",
+                                     #NULL = "-7",
+                                     #NULL = "-1"))
 
 # gender of provider
-h209red <- h209red %>% 
-  mutate(usc_gender_f = fct_recode(usc_gender_f,
-                                   NULL = "did not answer",
-                                   NULL = "inapplicable"))
-
-# insurance indicator in 2018
-# no NAs
+#h209red <- h209red %>% 
+  #mutate(usc_gender = ifelse(have_usc_f == "no", 
+                             #-100, 
+                             #usc_gender)) %>% 
+  #mutate(usc_gender_f = factor(usc_gender, 
+                               #levels = c("1", "2", "-100", "-8", "-1"))) %>%
+  #mutate(usc_gender_f = fct_recode(usc_gender_f,
+                                   #"male" = "1",
+                                   #"female" = "2",
+                                   #"no usc" = "-100",
+                                   #NULL = "-8",
+                                   #NULL = "-1"))
 ```
 
-
-#bar plots demographics
 ```{r}
+# creating our data set of usable variables 
+df <- h209red %>% select(pap_f, age, income_indiv, income_fam, totexp, 
+                         outofpocket_exp, menhlth_avg_f, genhlth_avg_f, 
+                         region_f, race_f, marital_stat_f, educ_f, smoke_freq_f, 
+                         limitation_f, afford_care_f, have_usc_f, usc_access_score, 
+                         usc_satisf_score, inscov_gen_2018_f)
+# note: didn't include the seperate access and satisfaction variables since we made the combined score variables (e.g. dist_from_usc_f, rch_usc_byphn_f, usc_offhrs_nw_f, usc_asks_abt_trts_f, usc_asks_hlp_dec_f, usc_expln_options_f)
+```
+
+## Bar plots demographics
+```{r, include = FALSE}
+# creating function for two (categorical) variable bar plots with percentages
+create_two_var_bar <- function(x_var, fill_var, x_label, fill_label) {
+  df %>% 
+    ggplot(aes_string(x = x_var, fill = fill_var)) +
+    geom_bar(position = "fill", width = 0.8) +
+    theme(axis.text = element_text(size = 9),
+          axis.title = element_text(size = 11),
+          legend.title = element_text(size = 11),
+          legend.text = element_text(size = 9)) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "RdPu") +
+    labs(x = x_label, 
+         y = "Percentage",
+         fill = fill_label) +
+    ggtitle(paste(x_label, "stratified by", tolower(fill_label)))  
+}
 
 # bar plot of pap smear vs. race/ethnicity
 create_two_var_bar("pap_f", "race_f", "Pap smear status", "Race/ethnicity")
@@ -682,47 +518,57 @@ create_two_var_bar("pap_f", "educ_f", "Pap smear status", "Education Status")
 create_two_var_bar("pap_f", "smoke_freq_f", "Pap smear status", "Smoking Status")
 ```
 
-
-#models
+## Models
 ```{r}
 # cost related
-m1 <- glm(formula = pap_f ~ afford_care_f + inscov_gen_2018_f + income_indiv + income_fam + income_percpov, family="binomial", data = h209red)
+m1 <- glm(formula = pap_f ~ afford_care_f + inscov_gen_2018_f + income_indiv + income_fam, family = binomial(), data = df)
 summary(m1)
 
 # accessibility related
-m2 <- glm(formula = pap_f ~limitation_f + have_usc_f + dist_from_usc_f + usc_offhrs_nw_f + rch_usc_byphn_f, family="binomial", data = h209red)
+m2 <- glm(formula = pap_f ~ limitation_f + have_usc_f + usc_access_score, family = binomial(), data = df)
 summary(m2)
 
 # provider characteristics
-m3 <- glm(formula = pap_f ~ usc_asks_abt_trts_f + usc_asks_hlp_dec_f + usc_expln_options_f + usc_spk_lang_f , family="binomial", data = h209red)
+m3 <- glm(formula = pap_f ~ usc_satisf_score, family = binomial(), data = df)
 summary(m3)
 
 #demographics
-m4 <- glm(formula = pap_f ~ region_f , family="binomial", data = h209red)
+m4 <- glm(formula = pap_f ~ region_f, family = binomial(), data = df)
 summary(m4)
 
-m4 <- glm(formula = pap_f ~  race_f , family="binomial", data = h209red)
+m4 <- glm(formula = pap_f ~  race_f, family = binomial(), data = df)
 summary(m4)
 
-m4 <- glm(formula = pap_f ~  age , family="binomial", data = h209red)
+m4 <- glm(formula = pap_f ~  age, family = binomial(), data = df)
 summary(m4)
 
-m4 <- glm(formula = pap_f ~ marital_stat_f, family="binomial", data = h209red)
+m4 <- glm(formula = pap_f ~ marital_stat_f, family = binomial(), data = df)
 summary(m4)
 
-m4 <- glm(formula = pap_f ~ educ_f, family="binomial", data = h209red)
+m4 <- glm(formula = pap_f ~ educ_f, family = binomial(), data = df)
 summary(m4)
 ```
 
-#backward selection
+## Forward and backward selection
 ```{r}
 library(caret)
 library(leaps)
+library(LogisticDx)
+library(ResourceSelection)
 
-mod1 <-glm(pap_f~., family = "binomial", data=h209red)
-full.model <- glm(formula = pap_f ~ region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + income_indiv + income_fam + income_percpov + menhlth_avg + genhlth_avg + limitation_f + afford_care_f + have_usc_f + dist_from_usc_f +rch_usc_byphn_f + usc_offhrs_nw_f + usc_asks_abt_trts_f + usc_asks_hlp_dec_f + usc_expln_options_f + inscov_gen_2018_f + totexp + outofpocket_exp , family = "binomial", data=mod1$model)
+cc_df <- df %>% drop_na()
 
+mod_forw <- step(glm(pap_f ~ 1, data = cc_df, family = binomial()), ~ age + income_indiv + income_fam + totexp + outofpocket_exp + menhlth_avg_f + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + usc_access_score + usc_satisf_score + inscov_gen_2018_f, direction = "forward")
+summary(mod_forw)
 
-mod_back <- step(full.model, direction = "backward", na.rm=TRUE)
+full_mod <- glm(pap_f ~ age + income_indiv + income_fam + totexp + outofpocket_exp + menhlth_avg_f + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + usc_access_score + usc_satisf_score + inscov_gen_2018_f, family = binomial(), data = cc_df) 
+summary(full_mod)
+
+mod_back <- step(full_mod, direction = "backward")
 summary(mod_back)
+
+hoslem.test(as.numeric(cc_df$pap_f) - 1, fitted(mod_forw), g = 10)
+hoslem.test(as.numeric(cc_df$pap_f) - 1, fitted(mod_back), g = 10)
+gof(mod_forw, g = 9)
+gof(mod_back, g = 9)
 ```
