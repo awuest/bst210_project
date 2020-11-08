@@ -650,7 +650,24 @@ app_diff_o <- 100*((0.26861-0.35428)/0.26861)
 app_diff_o
 
 # Testing for effect modification between race and insurance coverage 
-anova(mod_em_ri1, mod_em_ri, test="Chisq")
+anova(mod_em_ri, mod_em_ri1, test="Chisq")
+
+# Testing for effect modification between education and smoking frequency
+mod_ss<- glm(pap_f ~ smoke_freq_f, family=binomial(), data=cc_df)
+summary(mod_ss)
+mod_es <- glm(pap_f ~ smoke_freq_f + educ_f, family=binomial(), data=cc_df)
+summary(mod_es)
+
+# Appreciable difference between education and smoking 
+app_diff_ed <- 100*((0.39963-0.54751)/0.39963)
+app_diff_ed
+app_diff_sd <- 100*((0.34251 - 0.45238)/0.34251)
+app_diff_sd
+
+# Testing for effect modification between education and smoking frequency
+mod_es_em <- glm(pap_f ~ smoke_freq_f + educ_f + smoke_freq_f*educ_f, family=binomial(), data=cc_df)
+
+anova(mod_es_em, mod_es, test="Chisq")
 ```
 
 Age squared is significant (AIC = 5645.2)
@@ -662,3 +679,17 @@ According to the ANOVA test, there appears to be effect modification between mar
 Confounding is present between every race and insurance coverage except for those who identify as Asian, so there may be confounding between race in general and insurance coverage. 
 
 Accoring to the ANOVA test, there does not appear to be effect modification between race and insurance coverate (P=0.1045), so we fail to reject the null hypothesis. The simpler model without confounding is better. 
+
+There appreciable difference between smoking everyday and education is 37.00% and the difference between smoking some days and education is 32.08%, which suggests that there is confounding. 
+
+According to the ANOVA, there does not appear to be an improvement with the adjusted interaction model (P=0.5294).  So we fail to reject the null hypothesis and conclude that the simpler model is sufficient. 
+
+```{r}
+final_mod <- glm(pap_f ~ age + I(age^2) + marital_stat_f + income_fam + marital_stat_f*income_fam + race_f + inscov_gen_2018_f + educ_f + smoke_freq_f, family=binomial(), data=cc_df)
+summary(final_mod)
+hoslem.test(as.numeric(cc_df$pap_f) - 1, fitted(final_mod), g = 10)
+gof(final_mod, g = 9)
+```
+Significant improvement after adjusting for age-squared and interaction terms. Next time, we will continue to look at relationships between variables, and incorporate the significant variables according to backward selection as well as various interaction and quadratic terms. We may also utilize lasso and ridge regressions. 
+
+
