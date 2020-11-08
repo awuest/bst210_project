@@ -555,20 +555,110 @@ library(caret)
 library(leaps)
 library(LogisticDx)
 library(ResourceSelection)
+library(tidyr)
+library(MASS)
 
 cc_df <- df %>% drop_na()
 
-mod_forw <- step(glm(pap_f ~ 1, data = cc_df, family = binomial()), ~ age + income_indiv + income_fam + totexp + outofpocket_exp + menhlth_avg_f + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + usc_access_score + usc_satisf_score + inscov_gen_2018_f, direction = "forward")
+# Removing variables based on subject matter knowledge and models
+
+# Removing income_indiv because similar to income_fam, keeping income_fam because some women may not have an individual income. 
+
+# Removing totexp because less significant and less telling, e.g. out of pocket directly incorporates cost for person, and indirectly accounts for insurance coverage
+
+# Removed have_usc_f because we take into account having a provider with the access score 
+
+mod_exp <- glm(pap_f ~ totexp, data=cc_df, family=binomial())
+summary(mod_exp)
+
+mod_oop <- glm(pap_f ~ outofpocket_exp, data=cc_df, family=binomial())
+summary(mod_oop)
+
+mod_ac <- glm(pap_f ~ afford_care_f, data=cc_df, family=binomial())
+summary(mod_ac)
+
+
+mod_forw <- step(glm(pap_f ~ 1, data = cc_df, family = binomial()), ~ age + income_fam + outofpocket_exp + menhlth_avg_f + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + usc_access_score + usc_satisf_score + inscov_gen_2018_f, direction = "forward")
 summary(mod_forw)
 
-full_mod <- glm(pap_f ~ age + income_indiv + income_fam + totexp + outofpocket_exp + menhlth_avg_f + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + usc_access_score + usc_satisf_score + inscov_gen_2018_f, family = binomial(), data = cc_df) 
+full_mod <- glm(pap_f ~ age + income_fam + outofpocket_exp + menhlth_avg_f + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + usc_access_score + usc_satisf_score + inscov_gen_2018_f, family = binomial(), data = cc_df) 
 summary(full_mod)
 
 mod_back <- step(full_mod, direction = "backward")
 summary(mod_back)
 
-hoslem.test(as.numeric(cc_df$pap_f) - 1, fitted(mod_forw), g = 10)
+# mod_back and mod_forw are the same model 
+
+
+# These results indicate that the model we produced has poor fit 
 hoslem.test(as.numeric(cc_df$pap_f) - 1, fitted(mod_back), g = 10)
-gof(mod_forw, g = 9)
 gof(mod_back, g = 9)
+
+mod_adj <- glm(pap_f ~ age + income_fam + outofpocket_exp + race_f + marital_stat_f + educ_f + inscov_gen_2018_f + usc_satisf_score + smoke_freq_f + afford_care_f + limitation_f + usc_access_score, family=binomial(), data=cc_df)
+
+
+# Deleted some variables, and now a worse fit 
+mod_del <- glm(pap_f ~ age + income_fam + outofpocket_exp + race_f + marital_stat_f + educ_f + inscov_gen_2018_f + usc_satisf_score + smoke_freq_f, family=binomial(), data=cc_df)
+hoslem.test(as.numeric(cc_df$pap_f) - 1, fitted(mod_del), g = 10)
+
 ```
+Backward: age income_f outofpocket_exp race_f marital_stat educ_f smoke_freq limitation_f afford_care_f usc_access_score usc_satis_score inscov_gen_2018
+AIC: 5239.8
+Forward: age income_fam outofpocket_exp race_f marital_stat_f educ_f inscov_gen_2018_f usc_satisf_score smoke_freq_f afford_care_f limitation_f usc_access_score
+AIC: 5239.8
+
+
+# Secondary Questions
+```{r}
+# Testing age-squared
+mod_age <- glm(pap_f ~ age ,family=binomial(), data=cc_df)
+summary(mod_age)
+mod_age_sq <- glm(pap_f ~ age + I(age^2),family=binomial(), data=cc_df)
+summary(mod_age_sq)
+
+# Testing confounding of marital status and family income
+mod_conf1 <- glm(pap_f ~ income_fam, data=cc_df, family=binomial())
+summary(mod_conf1)
+mod_conf2 <- glm(pap_f ~ income_fam + marital_stat_f, data=cc_df, family=binomial())
+summary(mod_conf2)
+# Appreciable difference
+percent_diff <- ((-4.538e-06 + 5.891e-06)/-5.891e-06)*100
+percent_diff
+
+# Testing for effect modification between marital status and family income
+mod_em <- glm(pap_f ~ income_fam + marital_stat_f + income_fam*marital_stat_f, family=binomial, data=cc_df)
+summary(mod_em)
+
+anova(mod_conf2, mod_em,test = "Chisq")
+
+# Testing for effect modification between race and access
+mod_r <- glm(pap_f ~ race_f, family=binomial(), data=cc_df)
+summary(mod_r)
+mod_em_ri <- glm(pap_f ~ inscov_gen_2018_f + race_f, family=binomial(), data=cc_df)
+summary(mod_em_ri)
+mod_em_ri1 <-glm(pap_f ~ inscov_gen_2018_f + race_f + inscov_gen_2018_f*race_f, family=binomial(), data=cc_df) 
+summary(mod_em_ri1)
+
+# Appreciable difference between race and insurance coverage (confounding)
+app_diff_h <- 100*((0.35353-0.62993)/0.35353)
+app_diff_h
+app_diff_b <- 100*((0.39701-0.54115)/0.39701)
+app_diff_b
+app_diff_a <- 100*((1.13762-1.13644)/1.13762)
+app_diff_a
+app_diff_o <- 100*((0.26861-0.35428)/0.26861)
+app_diff_o
+
+# Testing for effect modification between race and insurance coverage 
+anova(mod_em_ri1, mod_em_ri, test="Chisq")
+```
+
+Age squared is significant (AIC = 5645.2)
+
+The appreciable difference between crude model (family income) and adjusted model (family income and marital status) is 22.97%, which suggests that there is confounding between marital status and family income. 
+
+According to the ANOVA test, there appears to be effect modification between marital status and family income. We reject the null hypothesis (P < 2.22e-10) and conclude that the simpler model is not adequate. 
+
+Confounding is present between every race and insurance coverage except for those who identify as Asian, so there may be confounding between race in general and insurance coverage. 
+
+Accoring to the ANOVA test, there does not appear to be effect modification between race and insurance coverate (P=0.1045), so we fail to reject the null hypothesis. The simpler model without confounding is better. 
