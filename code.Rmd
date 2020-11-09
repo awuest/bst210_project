@@ -80,7 +80,7 @@ summary(h209red$hrs_worked_avg) # too many missing variables to use
 ```{r}
 # re-calculating the mental and general health variables
 
-# perceived mental heath NA
+# perceived mental heath adding NA
 h209red$menhlth_rd1[h209red$menhlth_rd1 == -8 ]<- NA
 h209red$menhlth_rd1[h209red$menhlth_rd1 == -1 ]<- NA
 
@@ -91,13 +91,13 @@ h209red$menhlth_rd3[h209red$menhlth_rd3 == -7 ]<- NA
 h209red$menhlth_rd3[h209red$menhlth_rd3 == -8 ]<- NA
 h209red$menhlth_rd3[h209red$menhlth_rd3 == -1 ]<- NA
 
-# perceived mental health (rounded average)
+# perceived mental health, rounded average for each group
 h209red <- h209red %>% rowwise() %>%
   mutate(menhlth_avg = round(mean(c(menhlth_rd1, menhlth_rd2, menhlth_rd3), na.rm=TRUE)))
 
 summary(h209red$menhlth_avg)
 
-# perceived mental health as factor (rounded average)
+# perceived mental health converted to factor
 h209red <- h209red %>% 
   mutate(menhlth_avg_f = factor(menhlth_avg, 
                                 levels = c("5", "4", "3", "2", "1"))) %>%
@@ -121,13 +121,13 @@ h209red$genhlth_rd3[h209red$genhlth_rd3 == -7 ] <- NA
 h209red$genhlth_rd3[h209red$genhlth_rd3 == -8 ] <- NA
 h209red$genhlth_rd3[h209red$genhlth_rd3 == -1 ] <- NA
 
-# perceived mental health (rounded average)
+# perceived mental health, rounded average of each group
 h209red <- h209red %>% rowwise() %>%
   mutate(genhlth_avg = round(mean(c(genhlth_rd1, genhlth_rd2, genhlth_rd3), na.rm=TRUE)))
 
 summary(h209red$genhlth_avg)
 
-# perceived general health as factor (rounded average)
+# perceived general health converted to factor
 h209red <- h209red %>% 
   mutate(genhlth_avg_f = factor(genhlth_avg, 
                                 levels = c("5", "4", "3", "2", "1"))) %>%
@@ -532,21 +532,26 @@ summary(m2)
 m3 <- glm(formula = pap_f ~ usc_satisf_score, family = binomial(), data = df)
 summary(m3)
 
-#demographics
+# demographics
+# region
 m4 <- glm(formula = pap_f ~ region_f, family = binomial(), data = df)
 summary(m4)
 
-m4 <- glm(formula = pap_f ~  race_f, family = binomial(), data = df)
-summary(m4)
+# race
+m5 <- glm(formula = pap_f ~  race_f, family = binomial(), data = df)
+summary(m5)
 
-m4 <- glm(formula = pap_f ~  age, family = binomial(), data = df)
-summary(m4)
+# age
+m6 <- glm(formula = pap_f ~  age, family = binomial(), data = df)
+summary(m6)
 
-m4 <- glm(formula = pap_f ~ marital_stat_f, family = binomial(), data = df)
-summary(m4)
+# marital status
+m7 <- glm(formula = pap_f ~ marital_stat_f, family = binomial(), data = df)
+summary(m7)
 
-m4 <- glm(formula = pap_f ~ educ_f, family = binomial(), data = df)
-summary(m4)
+# education
+m8 <- glm(formula = pap_f ~ educ_f, family = binomial(), data = df)
+summary(m8)
 ```
 
 ## Forward and backward selection
@@ -564,12 +569,11 @@ cc_df <- df %>% drop_na()
 
 # Removing income_indiv because similar to income_fam, keeping income_fam because some women may not have an individual income. 
 
-# Removing totexp because less significant and less telling, e.g. out of pocket directly incorporates cost for person, and indirectly accounts for insurance coverage
-
 # Removed have_usc_f because we take into account having a provider with the access score 
 
 mod_exp <- glm(pap_f ~ totexp, data=cc_df, family=binomial())
 summary(mod_exp)
+# Removing totexp because less significant and less telling, e.g. out of pocket directly incorporates cost for person, and indirectly accounts for insurance coverage
 
 mod_oop <- glm(pap_f ~ outofpocket_exp, data=cc_df, family=binomial())
 summary(mod_oop)
@@ -577,17 +581,19 @@ summary(mod_oop)
 mod_ac <- glm(pap_f ~ afford_care_f, data=cc_df, family=binomial())
 summary(mod_ac)
 
-
-mod_forw <- step(glm(pap_f ~ 1, data = cc_df, family = binomial()), ~ age + income_fam + outofpocket_exp + menhlth_avg_f + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + usc_access_score + usc_satisf_score + inscov_gen_2018_f, direction = "forward")
-summary(mod_forw)
-
+#full model
 full_mod <- glm(pap_f ~ age + income_fam + outofpocket_exp + menhlth_avg_f + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + usc_access_score + usc_satisf_score + inscov_gen_2018_f, family = binomial(), data = cc_df) 
 summary(full_mod)
 
+# forward model selection
+mod_forw <- step(glm(pap_f ~ 1, data = cc_df, family = binomial()), ~ age + income_fam + outofpocket_exp + menhlth_avg_f + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + usc_access_score + usc_satisf_score + inscov_gen_2018_f, direction = "forward")
+summary(mod_forw)
+
+# backward model selection
 mod_back <- step(full_mod, direction = "backward")
 summary(mod_back)
 
-# mod_back and mod_forw are the same model 
+# forward and backward selection produce the same model: mod_back and mod_forw are the same model 
 
 
 # These results indicate that the model we produced has poor fit 
@@ -621,8 +627,9 @@ mod_conf1 <- glm(pap_f ~ income_fam, data=cc_df, family=binomial())
 summary(mod_conf1)
 mod_conf2 <- glm(pap_f ~ income_fam + marital_stat_f, data=cc_df, family=binomial())
 summary(mod_conf2)
-# Appreciable difference
-percent_diff <- ((-4.538e-06 + 5.891e-06)/-5.891e-06)*100
+
+# Appreciable difference between income beta and income beta with marital status
+percent_diff <- ((-4.538e-06 + 5.891e-06)/-4.538e-06)*100
 percent_diff
 
 # Testing for effect modification between marital status and family income
@@ -632,7 +639,7 @@ summary(mod_em)
 anova(mod_conf2, mod_em,test = "Chisq")
 
 # Testing for effect modification between race and access
-mod_r <- glm(pap_f ~ race_f, family=binomial(), data=cc_df)
+mod_r <- glm(pap_f ~ inscov_gen_2018_f, family=binomial(), data=cc_df)
 summary(mod_r)
 mod_em_ri <- glm(pap_f ~ inscov_gen_2018_f + race_f, family=binomial(), data=cc_df)
 summary(mod_em_ri)
@@ -640,14 +647,10 @@ mod_em_ri1 <-glm(pap_f ~ inscov_gen_2018_f + race_f + inscov_gen_2018_f*race_f, 
 summary(mod_em_ri1)
 
 # Appreciable difference between race and insurance coverage (confounding)
-app_diff_h <- 100*((0.35353-0.62993)/0.35353)
-app_diff_h
-app_diff_b <- 100*((0.39701-0.54115)/0.39701)
-app_diff_b
-app_diff_a <- 100*((1.13762-1.13644)/1.13762)
-app_diff_a
-app_diff_o <- 100*((0.26861-0.35428)/0.26861)
-app_diff_o
+inscov_public <- 100*((0.55166-0.61057)/0.55166)
+print(inscov_public)
+inscov_unins <- 100*((1.10619 -.17976 )/1.10619)
+print(inscov_unins)
 
 # Testing for effect modification between race and insurance coverage 
 anova(mod_em_ri, mod_em_ri1, test="Chisq")
@@ -676,7 +679,7 @@ The appreciable difference between crude model (family income) and adjusted mode
 
 According to the ANOVA test, there appears to be effect modification between marital status and family income. We reject the null hypothesis (P < 2.22e-10) and conclude that the simpler model is not adequate. 
 
-Confounding is present between every race and insurance coverage except for those who identify as Asian, so there may be confounding between race in general and insurance coverage. 
+Confounding is present between race and insurance coverage for both the insured and the uninsured.
 
 Accoring to the ANOVA test, there does not appear to be effect modification between race and insurance coverate (P=0.1045), so we fail to reject the null hypothesis. The simpler model without confounding is better. 
 
@@ -685,9 +688,15 @@ There appreciable difference between smoking everyday and education is 37.00% an
 According to the ANOVA, there does not appear to be an improvement with the adjusted interaction model (P=0.5294).  So we fail to reject the null hypothesis and conclude that the simpler model is sufficient. 
 
 ```{r}
+# model that incorporates the interaction and quadratic terms 
 final_mod <- glm(pap_f ~ age + I(age^2) + marital_stat_f + income_fam + marital_stat_f*income_fam + race_f + inscov_gen_2018_f + educ_f + smoke_freq_f, family=binomial(), data=cc_df)
+
 summary(final_mod)
+
+# hoslem test
 hoslem.test(as.numeric(cc_df$pap_f) - 1, fitted(final_mod), g = 10)
+
+# goodness of fit 
 gof(final_mod, g = 9)
 ```
 Significant improvement after adjusting for age-squared and interaction terms. Next time, we will continue to look at relationships between variables, and incorporate the significant variables according to backward selection as well as various interaction and quadratic terms. We may also utilize lasso and ridge regressions. 
