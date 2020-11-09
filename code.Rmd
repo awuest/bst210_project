@@ -649,7 +649,7 @@ summary(mod_em_ri1)
 # Appreciable difference between race and insurance coverage (confounding)
 inscov_public <- 100*((0.55166-0.61057)/0.55166)
 print(inscov_public)
-inscov_unins <- 100*((1.10619 -.17976 )/1.10619)
+inscov_unins <- 100*((1.10619 -1.17976 )/1.10619)
 print(inscov_unins)
 
 # Testing for effect modification between race and insurance coverage 
@@ -679,7 +679,7 @@ The appreciable difference between crude model (family income) and adjusted mode
 
 According to the ANOVA test, there appears to be effect modification between marital status and family income. We reject the null hypothesis (P < 2.22e-10) and conclude that the simpler model is not adequate. 
 
-Confounding is present between race and insurance coverage for both the insured and the uninsured.
+According to the appreciable difference rule (>10%), there only appears to be confounding between race and insurance coverage for those who are covered and no confounding for those who are unindusred. So, overall confounding between race and insurance coverage is not strong. 
 
 Accoring to the ANOVA test, there does not appear to be effect modification between race and insurance coverate (P=0.1045), so we fail to reject the null hypothesis. The simpler model without confounding is better. 
 
