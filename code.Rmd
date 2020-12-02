@@ -712,35 +712,26 @@ Significant improvement after adjusting for age-squared and interaction terms. N
 library(DAAG)
 library(glmnet)
 
-
-# check for missing data
-summary(is.na(h209red))
-# Some missing data, so we may need to remove some covariates for enough data points
-
-# omit NA's
-df <- h209red[complete.cases(h209red),]
-
-
 # Set up design matrix and outcome vector
-x = model.matrix(pap_f ~ ., df)[,-1]
-y = df$pap_f
+x <- model.matrix(pap_f ~ ., cc_df)[,-1]
+y <- cc_df$pap_f
 
 set.seed(2) # for reproducibility
 lambda_grid <- .5 ^ (-20:20)
 
 # Fit Ridge model: here alpha=0 whereas in LASSO alpha=1
-ridge.mod = glmnet(x,y, alpha=0, family="binomial", lambda = lambda_grid)
+ridge.mod <- glmnet(x, y, alpha = 0, family = "binomial", lambda = lambda_grid)
 summary(ridge.mod)
 ridge.mod
 plot(ridge.mod)
 # Get the values which plot the MSE vs Log(lambda)
 # minimum is the log(lambda) that minimizes the Ridge Sum of Squares 
 # (which has the Penalty term as we discussed in class)
-cv.out <- cv.glmnet(x,y, alpha=0, family = "binomial")
+cv.out <- cv.glmnet(x, y, alpha = 0, family = "binomial")
 plot(cv.out)
 cv.out$lambda.min
-coef.min = coef(cv.out, s="lambda.min")
-active.min = which(coef.min !=0)
+coef.min <- coef(cv.out, s = "lambda.min")
+active.min <- which(coef.min != 0)
 active.min
-dimnames(coef.min)[[1]][which(coef.min !=0)]
+dimnames(coef.min)[[1]][which(coef.min != 0)]
 ```
