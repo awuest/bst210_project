@@ -670,8 +670,7 @@ fit_age_quad_pred_metrics$auc # slightly better auc than full fit model
 
 # try spline 
 fit_age_cubic_spline <- glm(formula = pap_num ~ age + bSpline(age, df = 6, degree = 3) + income_indiv + income_fam + totexp + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f, family = binomial(), data = train_set)
-hoslem.test(train_set$pap_num, fitted(fit_age_cubic_spline), g = 10) # bad fit to training
-# changed the above from 'hoslem.test(train_set$pap_num, fitted(fit_age_quad), g = 10) ' - check with Anja
+hoslem.test(train_set$pap_num, fitted(fit_age_cubic_spline), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_age_cubic_spline_pred_metrics <- pred_metrics(fit_age_cubic_spline, 0.26)
@@ -679,7 +678,7 @@ fit_age_cubic_spline_pred_metrics$auc # slightly lower auc than age quad model
 
 # try gam
 fit_age_gam <- glm(formula = pap_num ~ age + s(age,4) + income_indiv + income_fam + totexp + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f, family = binomial(), data = train_set)
-hoslem.test(train_set$pap_num, fitted(fit_age_gam), g = 10) # bad fit to training
+hoslem.test(train_set$pap_num, fitted(fit_age_gam), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_age_gam_pred_metrics <- pred_metrics(fit_age_gam, 0.26)
@@ -722,31 +721,31 @@ fit_age_quad_interaction2_pred_metrics$auc # slightly better auc from interactio
 # quadratic individual income
 fit_ii_quad <- glm(formula = pap_num ~ age + I(age^2) + income_indiv + I(income_indiv^2) + income_fam + totexp + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_ii_quad), g = 10) # not as good of a fit as without the quadratic term
+hoslem.test(train_set$pap_num, fitted(fit_ii_quad), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_ii_quad_pred_metrics <- pred_metrics(fit_ii_quad, 0.26)
-fit_ii_quad_pred_metrics$auc # slightly worse auc from interaction 1 so we could keep
+fit_ii_quad_pred_metrics$auc # slightly worse auc from interaction 1 so we should not keep
 
 
 # spline individual income
 fit_ii_spline <- glm(formula = pap_num ~ age + I(age^2) + income_indiv + bSpline(income_indiv, df = 6, degree = 3) + income_fam + totexp + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_ii_spline), g = 10) # better fit than the adjusted model 
+hoslem.test(train_set$pap_num, fitted(fit_ii_spline), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_ii_spline_pred_metrics <- pred_metrics(fit_ii_spline, 0.26)
-fit_ii_spline_pred_metrics$auc # slightly worse auc from interaction 1 so we should not keep
+fit_ii_spline_pred_metrics$auc # slightly worse auc from interaction adjusted model so we should not keep
 
 # try gam
 # spline individual income
 fit_ii_gam <- gam(formula = pap_num ~ age + I(age^2) + income_indiv + s(income_indiv, 4) + income_fam + totexp + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_ii_gam), g = 10) # worse fit than the adjusted model 
+hoslem.test(train_set$pap_num, fitted(fit_ii_gam), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_ii_gam_pred_metrics <- pred_metrics(fit_ii_gam, 0.26)
-fit_ii_gam_pred_metrics$auc # worse fit adjusted model so we should not keep 
+fit_ii_gam_pred_metrics$auc # slightly worse than interaction adjusted model so we should not keep 
 
 ```
 
@@ -756,7 +755,7 @@ fit_ii_gam_pred_metrics$auc # worse fit adjusted model so we should not keep
 # quadratic family income
 fit_ifam_quad <- glm(formula = pap_num ~ age + I(age^2) + income_indiv + income_fam + I(income_fam^2) + totexp + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_ifam_quad), g = 10) # slightly better fit with the quadratic term
+hoslem.test(train_set$pap_num, fitted(fit_ifam_quad), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_ifam_quad_pred_metrics <- pred_metrics(fit_ifam_quad, 0.26)
@@ -765,7 +764,7 @@ fit_ifam_quad_pred_metrics$auc # slightly worse auc from interaction adjusted mo
 # spline family income
 fit_ifam_spline <- glm(formula = pap_num ~ age + I(age^2) + income_indiv + income_fam + bSpline(income_fam, df = 6, degree = 3) +  totexp + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_ifam_spline), g = 10) # better fit with the spline term than the adjusted model
+hoslem.test(train_set$pap_num, fitted(fit_ifam_spline), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_ifam_spline_pred_metrics <- pred_metrics(fit_ifam_spline, 0.26)
@@ -774,7 +773,7 @@ fit_ifam_spline_pred_metrics$auc # slightly worse auc from interaction adjusted 
 # try gam
 fit_ifam_gam <- gam(formula = pap_num ~ age + I(age^2) + income_indiv + income_fam + bSpline(income_fam, df = 6, degree = 3) +  totexp + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_ifam_gam), g = 10) # better fit with the gam term than the adjusted model
+hoslem.test(train_set$pap_num, fitted(fit_ifam_gam), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_ifam_gam_pred_metrics <- pred_metrics(fit_ifam_gam, 0.26)
@@ -787,7 +786,7 @@ fit_ifam_gam_pred_metrics$auc # slightly worse auc from interaction adjusted mod
 # quadratic total expense
 fit_texp_quad <- glm(formula = pap_num ~ age + I(age^2) + income_indiv + income_fam + totexp + I(totexp^2) + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_texp_quad), g = 10) # slightly worse fit with the quadratic term
+hoslem.test(train_set$pap_num, fitted(fit_texp_quad), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_texp_quad_pred_metrics <- pred_metrics(fit_texp_quad, 0.26)
@@ -797,7 +796,7 @@ fit_texp_quad_pred_metrics$auc # slightly better auc from interaction adjusted m
 # spline total expense
 fit_texp_spline <- glm(formula = pap_num ~ age + I(age^2) + income_indiv + income_fam + totexp + bSpline(df=6, degrees =3, totexp) + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_texp_spline), g = 10) # slightly worse fit with the quadratic term
+hoslem.test(train_set$pap_num, fitted(fit_texp_spline), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_texp_spline_pred_metrics <- pred_metrics(fit_texp_spline, 0.26)
@@ -807,7 +806,7 @@ fit_texp_spline_pred_metrics$auc # slightly better auc from interaction adjusted
 # try gam
 fit_texp_gam <- gam(formula = pap_num ~ age + I(age^2) + income_indiv + income_fam + totexp + s(totexp, 4) + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_texp_gam), g = 10) # slightly worse fit with the quadratic term
+hoslem.test(train_set$pap_num, fitted(fit_texp_gam), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_texp_gam_pred_metrics <- pred_metrics(fit_texp_gam, 0.26)
@@ -818,40 +817,34 @@ fit_texp_gam_pred_metrics$auc # slightly better auc from interaction adjusted mo
 ```
 
 ```{r}
-# incorporating non-linear tout of pocket expense
+# incorporating non-linear out of pocket expense
 # quadratic out of pocket expense
 fit_oop_quad <- glm(formula = pap_num ~ age + I(age^2) + income_indiv + income_fam + totexp + bSpline(df=6, degrees =3, totexp) + outofpocket_exp + I(outofpocket_exp^2) + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_oop_quad), g = 10) # better fit with the quadratic term when compared to the model adjusted with total expense 
+hoslem.test(train_set$pap_num, fitted(fit_oop_quad), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_oop_quad_pred_metrics <- pred_metrics(fit_oop_quad, 0.26)
 fit_oop_quad_pred_metrics$auc # equal auc from total expense adjusted model so we won't keep because we prefer a simpler model
 
-# incorporating spline total expense
+# incorporating spline out of pocket expense
 fit_oop_spline <- glm(formula = pap_num ~ age + I(age^2) + income_indiv + income_fam + totexp + bSpline(df=6, degrees =3, totexp) + outofpocket_exp + bSpline(df=6, degrees=3, outofpocket_exp) + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
-hoslem.test(train_set$pap_num, fitted(fit_oop_spline), g = 10) # worse fit with the spline term when compared to the model adjusted with total expense 
+hoslem.test(train_set$pap_num, fitted(fit_oop_spline), g = 10) # good fit to training
 
 # now we can see how it performs on testing data
 fit_oop_spline_pred_metrics <- pred_metrics(fit_oop_spline, 0.26)
 fit_oop_spline_pred_metrics$auc # slightly worse auc from total expense adjusted model so we won't keep
 
 
-# incorporating gamma total expense
+# incorporating gamma out of pocket expense
 fit_oop_gam <- gam(formula = pap_num ~ age + I(age^2) + income_indiv + income_fam + totexp + bSpline(df=6, degrees =3, totexp) + outofpocket_exp + s(outofpocket_exp,4) + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f + marital_stat_f*income_fam + educ_f*totexp, family = binomial(), data = train_set)
 
+hoslem.test(train_set$pap_num, fitted(fit_oop_gam), g = 10) # good fit to training
 
-hoslem.test(train_set$pap_num, fitted(fit_oop_gam), g = 10) # worse fit with the gamma term when compared to the model adjusted with total expense 
 # now we can see how it performs on testing data
 fit_oop_gam_pred_metrics <- pred_metrics(fit_oop_gam, 0.26)
-fit_oop_gam_pred_metrics$auc #slightly better auc than the adjusted model with quad total exp
+fit_oop_gam_pred_metrics$auc #slightly better auc than the adjusted model with spline total exp so we could keep
 
-```
-
-
-```{r}
-# build and compare more prediction models 
-# since we don't need to worry about interpretation for our prediction model, feel free to make models as complex as you want 
 ```
 
