@@ -461,7 +461,9 @@ cc_df_num <- data.frame(cc_df$pap_num, cc_df$age, cc_df$income_indiv,
                         as.numeric(cc_df$inscov_gen_2018_f) - 1)
 names <- colnames(cc_df)[2:16]
 colnames(cc_df_num) <- c("pap_num", names)
-correlation_matrix <- round(cor(cc_df_num), digits = 2) # looks pretty good
+correlation_matrix <- round(cor(cc_df_num), digits = 2) 
+# looks pretty good
+# we shouldn't expect much multicollinearity in our models based on these results but we'll check just in case when we run our models
 ```
 
 ```{r}
@@ -494,6 +496,7 @@ gof(mod_full, g = 10)
 mod_forw <- step(glm(pap_num ~ 1, data = cc_df, family = binomial()), ~ age + income_indiv + income_fam + totexp + outofpocket_exp + genhlth_avg_f + region_f + race_f + marital_stat_f + educ_f + smoke_freq_f + limitation_f + afford_care_f + have_usc_f + inscov_gen_2018_f, direction = "forward")
 summary(mod_forw)
 vif(mod_forw) # correlation looks good
+# no values above >2 so it doesn't seem we have much multicollinearity in the model so we will not be using ridge/lasso regression
 
 # backward model selection
 mod_back <- step(mod_full, direction = "backward")
