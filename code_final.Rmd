@@ -8,6 +8,8 @@ output: pdf_document
 ```{r library_load, results = "hide", message = FALSE}
 library(tidyverse)
 library(RColorBrewer)
+library(randomForest)
+library(gam)
 ```
 
 ```{r data_load, results = "hide"}
@@ -845,6 +847,23 @@ hoslem.test(train_set$pap_num, fitted(fit_oop_gam), g = 10) # good fit to traini
 # now we can see how it performs on testing data
 fit_oop_gam_pred_metrics <- pred_metrics(fit_oop_gam, 0.26)
 fit_oop_gam_pred_metrics$auc #slightly better auc than the adjusted model with spline total exp so we could keep
+
+```
+### random forest
+```{r}
+# same data set
+df_NA <- train_set
+
+# remove rows with NA values
+df_NA <- df_NA[complete.cases(df_NA),]
+
+# still over 4000 rows left
+fit_rf <- randomForest(pap_f ~., nodesize=1000, data=df_NA)
+
+# predict with random forest
+preds_rf = predict(fit_rf, newdata = test_set)
+
+# add confusion matrix?
 
 ```
 
